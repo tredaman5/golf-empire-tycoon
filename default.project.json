@@ -1,0 +1,23 @@
+{
+  "name": "GolfEmpireTycoon",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "GolfEmpireServer": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "GolfEmpireClient": {
+          "$path": "src/client"
+        }
+      }
+    }
+  }
+}

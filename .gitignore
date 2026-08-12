@@ -1,0 +1,19 @@
+# Rojo build outputs
+/*.rbxl
+/*.rbxlx
+/*.rbxm
+/*.rbxmx
+/sourcemap.json
+
+# Package/tool output
+/Packages/
+/ServerPackages/
+/.lune/
+
+# Editors and operating systems
+/.vscode/
+/.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
