@@ -10,7 +10,7 @@ Config.DataStore = {
 	RetryCount = 3,
 	RetryDelay = 2,
 	AutosaveInterval = 60,
-	EnableInStudio = true,
+	EnableInStudio = false,
 }
 
 Config.Plots = {
