@@ -7,8 +7,14 @@ export type PlayerData = {
 export type BuildingConfig = {
 	DisplayName: string,
 	Price: number,
-	Income: number,
-	IncomeInterval: number,
+	CustomerPayment: number,
+}
+
+export type CustomerConfig = {
+	SpawnInterval: number,
+	ServiceDuration: number,
+	WalkSpeed: number,
+	MaxQueueSize: number,
 }
 
 return {}

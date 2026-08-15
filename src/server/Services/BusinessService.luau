@@ -6,8 +6,8 @@ local BusinessService = {}
 local playerDataService
 local cashService
 local plotService
+local customerService
 local feedbackEvent
-local incomeTokens = {}
 local purchaseLocks = {}
 
 local function makePart(parent, name, size, position, color)
@@ -31,33 +31,12 @@ local function createBay(parent, origin)
 	makePart(model, "RightDivider", Vector3.new(1, 8, 10), origin + Vector3.new(6.5, 5, 8), Color3.fromRGB(195, 195, 195))
 end
 
-function BusinessService:Init(dataService, cash, plots, remote)
+function BusinessService:Init(dataService, cash, plots, customers, remote)
 	playerDataService = dataService
 	cashService = cash
 	plotService = plots
+	customerService = customers
 	feedbackEvent = remote
-end
-
-function BusinessService:_startIncome(player, buildingId)
-	local config = Config.Buildings[buildingId]
-	if not config then
-		return
-	end
-	local token = {}
-	incomeTokens[player] = token
-	task.spawn(function()
-		while incomeTokens[player] == token do
-			task.wait(config.IncomeInterval)
-			local data = playerDataService:Get(player)
-			if incomeTokens[player] ~= token or not data or not data.OwnedBuildings[buildingId] then
-				break
-			end
-			if not cashService:AddCash(player, config.Income) then
-				warn(`Could not pay income to {player.Name}`)
-				break
-			end
-		end
-	end)
 end
 
 function BusinessService:Purchase(player: Player, plotId: number, buildingId: string)
@@ -92,7 +71,7 @@ function BusinessService:Purchase(player: Player, plotId: number, buildingId: st
 				createBay(content, plot.Origin)
 			end
 		end
-		self:_startIncome(player, buildingId)
+		customerService:StartForPlayer(player, buildingId)
 		message = `Purchased {config.DisplayName}!`
 	end
 	feedbackEvent:FireClient(player, message)
@@ -122,7 +101,6 @@ function BusinessService:SetupPlot(player: Player)
 end
 
 function BusinessService:CleanupPlayer(player: Player)
-	incomeTokens[player] = nil
 	purchaseLocks[player] = nil
 end
 

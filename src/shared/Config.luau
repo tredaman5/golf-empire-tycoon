@@ -12,9 +12,15 @@ Config.Buildings = {
 	DrivingRangeBay = {
 		DisplayName = "Driving Range Bay",
 		Price = 250,
-		Income = 25,
-		IncomeInterval = 10,
+		CustomerPayment = 25,
 	},
+}
+
+Config.Customers = {
+	SpawnInterval = 8,
+	ServiceDuration = 6,
+	WalkSpeed = 12,
+	MaxQueueSize = 3,
 }
 
 return Config

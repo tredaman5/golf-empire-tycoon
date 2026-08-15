@@ -5,6 +5,7 @@ local services = script.Parent.Services
 local PlayerDataService = require(services.PlayerDataService)
 local CashService = require(services.CashService)
 local PlotService = require(services.PlotService)
+local CustomerService = require(services.CustomerService)
 local BusinessService = require(services.BusinessService)
 
 local remotes = Instance.new("Folder")
@@ -16,7 +17,8 @@ feedbackEvent.Parent = remotes
 
 CashService:Init(PlayerDataService)
 PlotService:Init(PlayerDataService)
-BusinessService:Init(PlayerDataService, CashService, PlotService, feedbackEvent)
+CustomerService:Init(PlayerDataService, CashService, PlotService, feedbackEvent)
+BusinessService:Init(PlayerDataService, CashService, PlotService, CustomerService, feedbackEvent)
 
 local function onPlayerAdded(player)
 	PlayerDataService:Create(player)
@@ -31,6 +33,7 @@ end
 
 local function onPlayerRemoving(player)
 	BusinessService:CleanupPlayer(player)
+	CustomerService:CleanupPlayer(player)
 	PlotService:ReleasePlot(player)
 	PlayerDataService:Remove(player)
 end

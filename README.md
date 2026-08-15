@@ -4,7 +4,7 @@ A server-authoritative Roblox tycoon/management game about building, managing, a
 
 ## Current milestone
 
-Milestone 1 implements: join, receive one of four generated plots, start with $500, buy a Driving Range Bay for $250, and earn $25 every 10 seconds. It includes a minimal cash UI and purchase feedback.
+Milestone 2 implements: join, receive one of four generated plots, start with $500, and buy a Driving Range Bay for $250. Visible customers then arrive, queue for the bay, practice, pay $25 after their visit, and leave. It includes a minimal cash UI and purchase feedback.
 
 Technology: Roblox Studio, Luau, Rojo, and Git.
 
@@ -14,7 +14,7 @@ Technology: Roblox Studio, Luau, Rojo, and Git.
 src/
   shared/                 Shared configuration and types
   server/
-    Services/             Data, cash, plot, and business services
+    Services/             Data, cash, plot, business, and customer services
     Main.server.luau      Startup and player lifecycle
   client/
     Controllers/          Minimal cash and feedback UI
@@ -39,7 +39,10 @@ Alternatively, run `rojo build -o GolfEmpireTycoon.rbxlx` and open the resulting
 2. Find your labeled property and approach its yellow purchase pad.
 3. Hold the prompt. Confirm the bay appears and cash becomes $250.
 4. Confirm the purchase pad is gone, preventing a duplicate purchase.
-5. Wait 10 seconds; confirm cash becomes $275 and continues rising by $25.
+5. Confirm a visible customer walks onto the property and uses the bay.
+6. Confirm additional customers queue rather than using an occupied bay.
+7. After a customer finishes practicing, confirm cash becomes $275 and the customer leaves.
+8. Confirm every completed visit adds $25; merely arriving or waiting must not pay revenue.
 
 ### Insufficient funds
 
@@ -51,11 +54,12 @@ The normal flow always affords the only purchase. To exercise this branch, tempo
 2. Confirm every player receives a different labeled plot and independent $500 balance.
 3. Walk one player to another player's pad; the purchase must be rejected.
 4. Buy on each owner's plot and confirm independent bays and income.
-5. Disconnect a player and confirm their plot becomes available and their business disappears.
+5. Confirm each plot has an independent customer queue and only pays its owner.
+6. Disconnect a player and confirm their customers, business, and plot are cleaned up.
 
 ## Architecture and security
 
-`Main` initializes services and owns player lifecycle. `PlayerDataService` stores session-only records. `CashService` is the sole currency writer. `PlotService` generates and assigns plots. `BusinessService` validates purchases, creates configured buildings, and manages cancellable income tasks.
+`Main` initializes services and owns player lifecycle. `PlayerDataService` stores session-only records. `CashService` is the sole currency writer. `PlotService` generates and assigns plots. `BusinessService` validates purchases and creates configured buildings. `CustomerService` manages cancellable customer lifecycles, queues, movement, and visit payments.
 
 The server creates each purchase prompt and receives the triggering player's identity from Roblox. It looks up the trusted price, verifies plot and building ownership, and spends authoritative cash. There is no client-to-server economy remote; the only remote carries server-to-client feedback.
 
@@ -64,9 +68,10 @@ The server creates each purchase prompt and receives the triggering player's ide
 - Data is session-only; DataStore persistence is intentionally deferred.
 - Four placeholder plots are generated; a fifth simultaneous player gets no plot.
 - Geometry and UI are deliberately basic.
+- Customers use deterministic movement across the generated flat plots rather than general-purpose pathfinding.
 - Roblox Studio execution cannot be automated from this repository, so use the checklist above.
-- NPCs, golf mechanics, course design, prestige, monetization, and other future systems are out of scope.
+- Playable golf, course design, prestige, monetization, and other future systems are out of scope.
 
-## Recommended Milestone 2
+## Recommended Milestone 3
 
-Add a small server-simulated customer flow so revenue corresponds to visible customer visits, then add persistence with schema versioning and safe Studio testing behavior.
+Add DataStore persistence with schema versioning, failure handling, and safe Studio testing behavior so cash and owned facilities survive between sessions.
