@@ -6,11 +6,11 @@ Config.DataStore = {
 	Name = "GolfEmpirePlayerData_v1",
 	StudioName = "GolfEmpirePlayerData_Studio_v1",
 	KeyPrefix = "Player_",
-	SchemaVersion = 1,
+	SchemaVersion = 2,
 	RetryCount = 3,
 	RetryDelay = 2,
 	AutosaveInterval = 60,
-	EnableInStudio = false,
+	EnableInStudio = true,
 }
 
 Config.Plots = {
@@ -24,6 +24,18 @@ Config.Buildings = {
 		DisplayName = "Driving Range Bay",
 		Price = 250,
 		CustomerPayment = 25,
+	},
+}
+
+Config.DrivingRange = {
+	SecondBayPrice = 750,
+	MaxBayCount = 2,
+	DefaultPricingStrategy = "Standard",
+	PricingOrder = { "Value", "Standard", "Premium" },
+	PricingStrategies = {
+		Value = { CustomerPayment = 20, SpawnInterval = 6 },
+		Standard = { CustomerPayment = 25, SpawnInterval = 8 },
+		Premium = { CustomerPayment = 40, SpawnInterval = 13 },
 	},
 }
 

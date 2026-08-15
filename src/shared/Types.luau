@@ -1,6 +1,8 @@
 export type PlayerData = {
 	Cash: number,
 	OwnedBuildings: { [string]: boolean },
+	BayCount: number,
+	PricingStrategy: string,
 	PlotId: number?,
 }
 
@@ -8,6 +10,8 @@ export type SavedPlayerData = {
 	SchemaVersion: number,
 	Cash: number,
 	OwnedBuildings: { [string]: boolean },
+	BayCount: number,
+	PricingStrategy: string,
 }
 
 export type BuildingConfig = {

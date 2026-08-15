@@ -4,7 +4,7 @@ A server-authoritative Roblox tycoon/management game about building, managing, a
 
 ## Current milestone
 
-Milestone 3 implements versioned DataStore persistence for cash and owned buildings. Players can buy a Driving Range Bay, receive visible customer visits and payments, leave, and return with their cash and bay restored.
+Milestone 4 adds a visible second-bay expansion and driving-range pricing management. Players choose Value, Standard, or Premium pricing to trade customer demand against payment size, and can expand to serve two customers at once. Schema-1 saves migrate to schema 2 without losing cash or ownership.
 
 Technology: Roblox Studio, Luau, Rojo, and Git.
 
@@ -81,6 +81,16 @@ The normal flow always affords the only purchase. To exercise this branch, tempo
 6. Repeat with 2-4 local players and confirm their records remain independent.
 7. Disable Studio API access temporarily and confirm a failed load does not create or save default data.
 
+### Driving range management
+
+1. Buy the first bay and confirm the green management kiosk and blue expansion pad appear.
+2. Use the kiosk to cycle Value, Standard, and Premium pricing.
+3. Confirm payments are $20, $25, and $40 respectively, and customer arrivals visibly slow as prices rise.
+4. Earn $750 and purchase the second bay.
+5. Confirm the facility visibly expands and two customers can practice simultaneously without sharing a bay.
+6. Leave and rejoin with Studio persistence enabled; confirm both bays and the selected pricing strategy return.
+7. Load an existing schema-1 save and confirm it becomes one bay with Standard pricing while retaining cash and ownership.
+
 ## Architecture and security
 
 `Main` initializes services and owns player lifecycle. `PlayerDataService` validates versioned records, retries cloud operations, serializes saves, autosaves, and protects failed loads from destructive fallback saves. `CashService` is the sole currency writer. `PlotService` generates and assigns plots. `BusinessService` validates purchases and restores configured buildings. `CustomerService` manages cancellable customer lifecycles, queues, movement, and visit payments.
@@ -95,6 +105,6 @@ The server creates each purchase prompt and receives the triggering player's ide
 - Roblox Studio execution cannot be automated from this repository, so use the checklist above.
 - Playable golf, course design, prestige, monetization, and other future systems are out of scope.
 
-## Recommended Milestone 4
+## Recommended Milestone 5
 
-Add the first meaningful facility upgrade and a small management decision so players begin shaping how their golf business operates instead of following a single purchase path.
+Add business performance reporting and the first course-development unlock so management decisions begin funding expansion beyond the driving range.

@@ -101,6 +101,24 @@ local function dequeueCustomer(state, customer)
 	end
 end
 
+local function findAvailableBay(state)
+	local data = playerDataService:Get(state.Player)
+	local bayCount = if data then data.BayCount else 0
+	for bayIndex = 1, bayCount do
+		if not state.BayBusy[bayIndex] then
+			return bayIndex
+		end
+	end
+	return nil
+end
+
+local function getBayPosition(state, bayIndex)
+	local data = playerDataService:Get(state.Player)
+	local bayCount = if data then data.BayCount else 1
+	local xOffset = if bayCount == 1 then 0 else (if bayIndex == 1 then -8 else 8)
+	return state.Plot.Origin + Vector3.new(xOffset, 3, 8)
+end
+
 local function runCustomer(state, customer)
 	while isActive(state) and customer.Parent do
 		local queueIndex = table.find(state.Queue, customer)
@@ -110,9 +128,11 @@ local function runCustomer(state, customer)
 		if not moveCustomer(state, customer, getQueuePosition(state, queueIndex)) then
 			break
 		end
-		if queueIndex == 1 and not state.Busy then
-			state.Busy = true
-			local servicePosition = state.Plot.Origin + Vector3.new(0, 3, 8)
+		local bayIndex = if queueIndex == 1 then findAvailableBay(state) else nil
+		if bayIndex then
+			state.BayBusy[bayIndex] = true
+			dequeueCustomer(state, customer)
+			local servicePosition = getBayPosition(state, bayIndex)
 			local reachedBay = moveCustomer(state, customer, servicePosition)
 			local status
 			if reachedBay then
@@ -134,18 +154,17 @@ local function runCustomer(state, customer)
 			end
 			if reachedBay and waitWhileActive(state, Config.Customers.ServiceDuration) then
 				local data = playerDataService:Get(state.Player)
-				local building = Config.Buildings[state.BuildingId]
-				if data and data.OwnedBuildings[state.BuildingId] and building then
-					if cashService:AddCash(state.Player, building.CustomerPayment) then
-						feedbackEvent:FireClient(state.Player, `Customer paid ${building.CustomerPayment}.`)
+				local strategy = data and Config.DrivingRange.PricingStrategies[data.PricingStrategy]
+				if data and data.OwnedBuildings[state.BuildingId] and strategy then
+					if cashService:AddCash(state.Player, strategy.CustomerPayment) then
+						feedbackEvent:FireClient(state.Player, `Customer paid ${strategy.CustomerPayment}.`)
 					end
 				end
 			end
 			if status then
 				status:Destroy()
 			end
-			dequeueCustomer(state, customer)
-			state.Busy = false
+			state.BayBusy[bayIndex] = false
 			if isActive(state) and customer.Parent then
 				moveCustomer(state, customer, state.Plot.Origin + Vector3.new(28, 3, -25))
 			end
@@ -185,19 +204,22 @@ function CustomerService:StartForPlayer(player: Player, buildingId: string)
 		BuildingId = buildingId,
 		Folder = folder,
 		Queue = {},
-		Busy = false,
+		BayBusy = {},
 	}
 	states[player] = state
 
 	task.spawn(function()
 		while isActive(state) do
-			if #state.Queue < Config.Customers.MaxQueueSize + 1 then
+			if #state.Queue < Config.Customers.MaxQueueSize then
 				local customer = createCustomer(folder)
 				customer:PivotTo(CFrame.new(plot.Origin + Vector3.new(-28, 3, -25)))
 				table.insert(state.Queue, customer)
 				task.spawn(runCustomer, state, customer)
 			end
-			if not waitWhileActive(state, Config.Customers.SpawnInterval) then
+			local data = playerDataService:Get(player)
+			local strategy = data and Config.DrivingRange.PricingStrategies[data.PricingStrategy]
+			local spawnInterval = if strategy then strategy.SpawnInterval else Config.Customers.SpawnInterval
+			if not waitWhileActive(state, spawnInterval) then
 				break
 			end
 		end

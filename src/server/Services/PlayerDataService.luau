@@ -18,6 +18,8 @@ local function defaultData()
 	return {
 		Cash = Config.StartingCash,
 		OwnedBuildings = {},
+		BayCount = 0,
+		PricingStrategy = Config.DrivingRange.DefaultPricingStrategy,
 		PlotId = nil,
 	}
 end
@@ -30,7 +32,7 @@ local function sanitizeSavedData(saved)
 		return nil, "Saved data is not a table."
 	end
 	local schemaVersion = saved.SchemaVersion
-	if schemaVersion ~= Config.DataStore.SchemaVersion then
+	if schemaVersion ~= 1 and schemaVersion ~= Config.DataStore.SchemaVersion then
 		return nil, `Unsupported data schema version: {tostring(schemaVersion)}`
 	end
 	if not isFiniteNumber(saved.Cash) or saved.Cash < 0 then
@@ -46,9 +48,21 @@ local function sanitizeSavedData(saved)
 			ownedBuildings[buildingId] = true
 		end
 	end
+	local bayCount = if schemaVersion == 1
+		then (if ownedBuildings.DrivingRangeBay then 1 else 0)
+		else saved.BayCount
+	if typeof(bayCount) ~= "number" or bayCount % 1 ~= 0 or bayCount < 0 or bayCount > Config.DrivingRange.MaxBayCount then
+		return nil, "Saved bay count is invalid."
+	end
+	local pricingStrategy = if schemaVersion == 1 then Config.DrivingRange.DefaultPricingStrategy else saved.PricingStrategy
+	if typeof(pricingStrategy) ~= "string" or not Config.DrivingRange.PricingStrategies[pricingStrategy] then
+		return nil, "Saved pricing strategy is invalid."
+	end
 	return {
 		Cash = math.floor(saved.Cash),
 		OwnedBuildings = ownedBuildings,
+		BayCount = bayCount,
+		PricingStrategy = pricingStrategy,
 		PlotId = nil,
 	}
 end
@@ -64,6 +78,8 @@ local function serializeData(data)
 		SchemaVersion = Config.DataStore.SchemaVersion,
 		Cash = math.max(0, math.floor(data.Cash)),
 		OwnedBuildings = ownedBuildings,
+		BayCount = data.BayCount,
+		PricingStrategy = data.PricingStrategy,
 	}
 end
 
