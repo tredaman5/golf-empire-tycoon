@@ -2,6 +2,17 @@ local Config = {}
 
 Config.StartingCash = 500
 
+Config.DataStore = {
+	Name = "GolfEmpirePlayerData_v1",
+	StudioName = "GolfEmpirePlayerData_Studio_v1",
+	KeyPrefix = "Player_",
+	SchemaVersion = 1,
+	RetryCount = 3,
+	RetryDelay = 2,
+	AutosaveInterval = 60,
+	EnableInStudio = false,
+}
+
 Config.Plots = {
 	Count = 4,
 	Size = Vector3.new(90, 1, 70),

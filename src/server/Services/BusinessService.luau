@@ -80,12 +80,18 @@ end
 
 function BusinessService:SetupPlot(player: Player)
 	local plot = plotService:GetPlayerPlot(player)
-	if not plot then
+	local data = playerDataService:Get(player)
+	if not plot or not data then
 		return false
 	end
 	local content = Instance.new("Folder")
 	content.Name = "PlayerBusiness"
 	content.Parent = plot.Model
+	if data.OwnedBuildings.DrivingRangeBay then
+		createBay(content, plot.Origin)
+		customerService:StartForPlayer(player, "DrivingRangeBay")
+		return true
+	end
 	local pad = makePart(content, "PurchasePad", Vector3.new(14, 1, 14), plot.Origin + Vector3.new(0, 1, 8), Color3.fromRGB(255, 200, 45))
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Buy Driving Range Bay - $250"

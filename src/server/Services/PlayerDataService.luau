@@ -1,31 +1,190 @@
+local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 
 local PlayerDataService = {}
 local records = {}
+local saveLocks = {}
+local dataStore
+local persistenceEnabled = false
 
-function PlayerDataService:Create(player: Player)
-	if records[player] then
-		return records[player]
-	end
+local function isFiniteNumber(value)
+	return typeof(value) == "number" and value == value and value > -math.huge and value < math.huge
+end
 
-	local data = {
+local function defaultData()
+	return {
 		Cash = Config.StartingCash,
 		OwnedBuildings = {},
 		PlotId = nil,
 	}
+end
+
+local function sanitizeSavedData(saved)
+	if saved == nil then
+		return defaultData()
+	end
+	if typeof(saved) ~= "table" then
+		return nil, "Saved data is not a table."
+	end
+	local schemaVersion = saved.SchemaVersion
+	if schemaVersion ~= Config.DataStore.SchemaVersion then
+		return nil, `Unsupported data schema version: {tostring(schemaVersion)}`
+	end
+	if not isFiniteNumber(saved.Cash) or saved.Cash < 0 then
+		return nil, "Saved cash is invalid."
+	end
+	if typeof(saved.OwnedBuildings) ~= "table" then
+		return nil, "Saved buildings are invalid."
+	end
+
+	local ownedBuildings = {}
+	for buildingId, owned in saved.OwnedBuildings do
+		if typeof(buildingId) == "string" and owned == true and Config.Buildings[buildingId] then
+			ownedBuildings[buildingId] = true
+		end
+	end
+	return {
+		Cash = math.floor(saved.Cash),
+		OwnedBuildings = ownedBuildings,
+		PlotId = nil,
+	}
+end
+
+local function serializeData(data)
+	local ownedBuildings = {}
+	for buildingId, owned in data.OwnedBuildings do
+		if owned == true and Config.Buildings[buildingId] then
+			ownedBuildings[buildingId] = true
+		end
+	end
+	return {
+		SchemaVersion = Config.DataStore.SchemaVersion,
+		Cash = math.max(0, math.floor(data.Cash)),
+		OwnedBuildings = ownedBuildings,
+	}
+end
+
+local function retry(operationName, callback)
+	local lastError
+	for attempt = 1, Config.DataStore.RetryCount do
+		local success, result = pcall(callback)
+		if success then
+			return true, result
+		end
+		lastError = result
+		warn(`DataStore {operationName} attempt {attempt} failed: {tostring(result)}`)
+		if attempt < Config.DataStore.RetryCount then
+			task.wait(Config.DataStore.RetryDelay * attempt)
+		end
+	end
+	return false, lastError
+end
+
+function PlayerDataService:Init()
+	persistenceEnabled = not RunService:IsStudio() or Config.DataStore.EnableInStudio
+	if persistenceEnabled then
+		local storeName = if RunService:IsStudio() then Config.DataStore.StudioName else Config.DataStore.Name
+		dataStore = DataStoreService:GetDataStore(storeName)
+	else
+		warn("DataStore persistence is disabled in Studio; this session will not load or save cloud data.")
+	end
+end
+
+function PlayerDataService:Load(player: Player): boolean
+	if records[player] then
+		return true
+	end
+	player:SetAttribute("DataLoaded", false)
+
+	local data
+	if persistenceEnabled then
+		local key = Config.DataStore.KeyPrefix .. player.UserId
+		local success, saved = retry("load", function()
+			return dataStore:GetAsync(key)
+		end)
+		if not success then
+			warn(`Unable to load data for {player.Name}; saving will remain disabled for this player.`)
+			return false
+		end
+		local validationError
+		data, validationError = sanitizeSavedData(saved)
+		if not data then
+			warn(`Unable to use data for {player.Name}: {validationError}`)
+			return false
+		end
+	else
+		data = defaultData()
+	end
+
 	records[player] = data
 	player:SetAttribute("Cash", data.Cash)
-	return data
+	player:SetAttribute("DataLoaded", true)
+	return true
 end
 
 function PlayerDataService:Get(player: Player)
 	return records[player]
 end
 
+function PlayerDataService:Save(player: Player): boolean
+	local data = records[player]
+	if not data or not persistenceEnabled then
+		return data ~= nil
+	end
+
+	while saveLocks[player] do
+		task.wait(0.1)
+		data = records[player]
+		if not data then
+			return false
+		end
+	end
+	saveLocks[player] = true
+	local snapshot = serializeData(data)
+	local key = Config.DataStore.KeyPrefix .. player.UserId
+	local blockedByNewerSchema = false
+	local success = retry("save", function()
+		return dataStore:UpdateAsync(key, function(current)
+			if typeof(current) == "table" and typeof(current.SchemaVersion) == "number"
+				and current.SchemaVersion > Config.DataStore.SchemaVersion then
+				blockedByNewerSchema = true
+				return nil
+			end
+			return snapshot
+		end)
+	end)
+	saveLocks[player] = nil
+	if blockedByNewerSchema then
+		warn(`Refused to overwrite newer saved data for {player.Name}.`)
+		return false
+	end
+	return success
+end
+
+function PlayerDataService:StartAutosave()
+	task.spawn(function()
+		while task.wait(Config.DataStore.AutosaveInterval) do
+			for player in records do
+				task.spawn(function()
+					if not self:Save(player) then
+						warn(`Autosave failed for {player.Name}.`)
+					end
+				end)
+			end
+		end
+	end)
+end
+
 function PlayerDataService:Remove(player: Player)
 	records[player] = nil
+	saveLocks[player] = nil
+end
+
+function PlayerDataService:IsPersistenceEnabled(): boolean
+	return persistenceEnabled
 end
 
 return PlayerDataService

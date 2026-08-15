@@ -4,6 +4,12 @@ export type PlayerData = {
 	PlotId: number?,
 }
 
+export type SavedPlayerData = {
+	SchemaVersion: number,
+	Cash: number,
+	OwnedBuildings: { [string]: boolean },
+}
+
 export type BuildingConfig = {
 	DisplayName: string,
 	Price: number,
