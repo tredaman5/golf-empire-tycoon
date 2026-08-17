@@ -23,6 +23,7 @@ local function defaultData()
 		CustomersServed = 0,
 		LifetimeRevenue = 0,
 		PuttingGreenOwned = false,
+		ProShopOwned = false,
 		PlotId = nil,
 	}
 end
@@ -35,7 +36,7 @@ local function sanitizeSavedData(saved)
 		return nil, "Saved data is not a table."
 	end
 	local schemaVersion = saved.SchemaVersion
-	if schemaVersion ~= 1 and schemaVersion ~= 2 and schemaVersion ~= Config.DataStore.SchemaVersion then
+	if schemaVersion ~= 1 and schemaVersion ~= 2 and schemaVersion ~= 3 and schemaVersion ~= Config.DataStore.SchemaVersion then
 		return nil, `Unsupported data schema version: {tostring(schemaVersion)}`
 	end
 	if not isFiniteNumber(saved.Cash) or saved.Cash < 0 then
@@ -64,10 +65,11 @@ local function sanitizeSavedData(saved)
 	local customersServed = if schemaVersion < 3 then 0 else saved.CustomersServed
 	local lifetimeRevenue = if schemaVersion < 3 then 0 else saved.LifetimeRevenue
 	local puttingGreenOwned = if schemaVersion < 3 then false else saved.PuttingGreenOwned
+	local proShopOwned = if schemaVersion < 4 then false else saved.ProShopOwned
 	if typeof(customersServed) ~= "number" or customersServed % 1 ~= 0 or customersServed < 0 then
 		return nil, "Saved customer count is invalid."
 	end
-	if not isFiniteNumber(lifetimeRevenue) or lifetimeRevenue < 0 or typeof(puttingGreenOwned) ~= "boolean" then
+	if not isFiniteNumber(lifetimeRevenue) or lifetimeRevenue < 0 or typeof(puttingGreenOwned) ~= "boolean" or typeof(proShopOwned) ~= "boolean" then
 		return nil, "Saved progression is invalid."
 	end
 	return {
@@ -78,6 +80,7 @@ local function sanitizeSavedData(saved)
 		CustomersServed = customersServed,
 		LifetimeRevenue = math.floor(lifetimeRevenue),
 		PuttingGreenOwned = puttingGreenOwned,
+		ProShopOwned = proShopOwned,
 		PlotId = nil,
 	}
 end
@@ -98,6 +101,7 @@ local function serializeData(data)
 		CustomersServed = data.CustomersServed,
 		LifetimeRevenue = data.LifetimeRevenue,
 		PuttingGreenOwned = data.PuttingGreenOwned,
+		ProShopOwned = data.ProShopOwned,
 	}
 end
 
@@ -160,6 +164,7 @@ function PlayerDataService:Load(player: Player): boolean
 	player:SetAttribute("LifetimeRevenue", data.LifetimeRevenue)
 	player:SetAttribute("BayCount", data.BayCount)
 	player:SetAttribute("PuttingGreenOwned", data.PuttingGreenOwned)
+	player:SetAttribute("ProShopOwned", data.ProShopOwned)
 	player:SetAttribute("DataLoaded", true)
 	return true
 end

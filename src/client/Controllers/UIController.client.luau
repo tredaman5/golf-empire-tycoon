@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
@@ -22,12 +23,12 @@ local feedbackLabel = Instance.new("TextLabel")
 feedbackLabel.Name = "FeedbackLabel"
 feedbackLabel.AnchorPoint = Vector2.new(0.5, 0)
 feedbackLabel.Position = UDim2.fromScale(0.5, 0.08)
-feedbackLabel.Size = UDim2.fromOffset(440, 48)
+feedbackLabel.Size = UDim2.fromOffset(360, 40)
 feedbackLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 feedbackLabel.BackgroundTransparency = 0.15
 feedbackLabel.TextColor3 = Color3.new(1, 1, 1)
 feedbackLabel.Font = Enum.Font.GothamSemibold
-feedbackLabel.TextScaled = true
+feedbackLabel.TextSize = 22
 feedbackLabel.Visible = false
 feedbackLabel.Parent = gui
 
@@ -66,6 +67,66 @@ end
 local remotes = ReplicatedStorage:WaitForChild("GolfEmpireRemotes")
 remotes:WaitForChild("Feedback").OnClientEvent:Connect(showFeedback)
 local managementEvent = remotes:WaitForChild("Management")
+local customerAnimationEvent = remotes:WaitForChild("CustomerAnimation")
+local customerAnimationVersions = setmetatable({}, { __mode = "k" })
+
+local function animateCustomer(customer, action, version)
+	if typeof(customer) ~= "Instance" or not customer:IsA("Model") or not customer.Parent then return end
+	local clubGrip = customer:FindFirstChild("GolfClubGrip", true)
+	local rightShoulder = customer:FindFirstChild("RightShoulder", true)
+	local leftShoulder = customer:FindFirstChild("LeftShoulder", true)
+	local waist = customer:FindFirstChild("Waist", true)
+	if not clubGrip then return end
+	if action == "Reset" then
+		clubGrip.Transform = CFrame.identity
+		if rightShoulder then rightShoulder.Transform = CFrame.identity end
+		if leftShoulder then leftShoulder.Transform = CFrame.identity end
+		if waist then waist.Transform = CFrame.identity end
+		return
+	end
+	local isPutter = action == "Putt"
+	local targets = {
+		Back = {
+			Club = if isPutter then CFrame.Angles(math.rad(-20), 0, math.rad(-45)) else CFrame.Angles(math.rad(-50), math.rad(35), math.rad(-145)),
+			Right = CFrame.Angles(if isPutter then math.rad(-25) else math.rad(-80), 0, math.rad(-25)),
+			Left = CFrame.Angles(if isPutter then math.rad(-18) else math.rad(-55), 0, math.rad(20)),
+			Waist = CFrame.Angles(0, if isPutter then math.rad(10) else math.rad(35), 0),
+		},
+		Follow = {
+			Club = if isPutter then CFrame.Angles(math.rad(20), 0, math.rad(45)) else CFrame.Angles(math.rad(45), math.rad(-30), math.rad(135)),
+			Right = CFrame.Angles(if isPutter then math.rad(25) else math.rad(70), 0, math.rad(30)),
+			Left = CFrame.Angles(if isPutter then math.rad(18) else math.rad(50), 0, math.rad(-20)),
+			Waist = CFrame.Angles(0, if isPutter then math.rad(-10) else math.rad(-35), 0),
+		},
+	}
+	local function pose(target, duration)
+		local starts = {
+			Club = clubGrip.Transform,
+			Right = rightShoulder and rightShoulder.Transform,
+			Left = leftShoulder and leftShoulder.Transform,
+			Waist = waist and waist.Transform,
+		}
+		local startedAt = os.clock()
+		while customer.Parent and customerAnimationVersions[customer] == version do
+			local alpha = math.min((os.clock() - startedAt) / duration, 1)
+			clubGrip.Transform = starts.Club:Lerp(target.Club, alpha)
+			if rightShoulder then rightShoulder.Transform = starts.Right:Lerp(target.Right, alpha) end
+			if leftShoulder then leftShoulder.Transform = starts.Left:Lerp(target.Left, alpha) end
+			if waist then waist.Transform = starts.Waist:Lerp(target.Waist, alpha) end
+			if alpha >= 1 then break end
+			RunService.RenderStepped:Wait()
+		end
+	end
+	pose(targets.Back, if isPutter then 0.6 else 0.8)
+	pose(targets.Follow, if isPutter then 0.4 else 0.32)
+	pose({ Club = CFrame.identity, Right = CFrame.identity, Left = CFrame.identity, Waist = CFrame.identity }, 0.5)
+end
+
+customerAnimationEvent.OnClientEvent:Connect(function(customer, action)
+	local version = (customerAnimationVersions[customer] or 0) + 1
+	customerAnimationVersions[customer] = version
+	task.spawn(animateCustomer, customer, action, version)
+end)
 
 local dashboard = Instance.new("Frame")
 dashboard.Name = "BusinessDashboard"

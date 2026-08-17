@@ -4,7 +4,7 @@ A server-authoritative Roblox tycoon/management game about building, managing, a
 
 ## Current milestone
 
-Milestone 5 adds a client business dashboard, persistent performance metrics, and the first course-development facility. Serving 25 customers and earning $750 lifetime revenue unlocks a $1,000 Putting Green with its own visitors and revenue. Older saves migrate to schema 3.
+Milestone 5.5 establishes the first visual and property-expansion foundation: landscaped resort plots, a shared multi-bay driving range, animated golfer customers, an arrival and parking district, and a persistent revenue-generating Pro Shop. The Milestone 5 dashboard, metrics, progression, and persistence remain intact.
 
 Technology: Roblox Studio, Luau, Rojo, and Git.
 
@@ -86,10 +86,11 @@ The normal flow always affords the only purchase. To exercise this branch, tempo
 1. Buy the first bay and confirm the green management kiosk and blue expansion pad appear.
 2. Use the kiosk to cycle Value, Standard, and Premium pricing.
 3. Confirm payments are $20, $25, and $40 respectively, and customer arrivals visibly slow as prices rise.
-4. Earn $750 and purchase the second bay.
-5. Confirm the facility visibly expands and two customers can practice simultaneously without sharing a bay.
-6. Leave and rejoin with Studio persistence enabled; confirm both bays and the selected pricing strategy return.
-7. Load an existing schema-1 save and confirm it becomes one bay with Standard pricing while retaining cash and ownership.
+4. Earn $750 and purchase the second bay, then purchase Bay 3 for $1,500 and Bay 4 for $2,500.
+5. Confirm the shared canopy expands at every step and up to four customers can practice simultaneously without sharing a station.
+6. Confirm arrivals accelerate as bays are added; with four bays, Standard pricing should bring a customer roughly every 2.5 seconds and keep several stations active.
+7. Leave and rejoin with Studio persistence enabled; confirm all purchased bays and the selected pricing strategy return.
+8. Load an existing schema-1 save and confirm it becomes one bay with Standard pricing while retaining cash and ownership.
 
 ### Business dashboard and putting green
 
@@ -100,6 +101,29 @@ The normal flow always affords the only purchase. To exercise this branch, tempo
 5. Purchase the Putting Green for $1,000 and confirm the green, cup, pole, and flag appear.
 6. Confirm periodic customers use the Putting Green, display `Putting...`, and pay $35.
 7. Rejoin with persistence enabled and confirm metrics, pricing, bays, and Putting Green return.
+
+### Visual foundation
+
+1. Confirm plots have grass, cobblestone entry paths, trees, shrubs, and warm daylight rather than an exposed Baseplate presentation.
+2. Confirm the range has a shared metal canopy, multiple hitting stations, mats, baskets, targets, and surrounding safety netting.
+3. Confirm the management kiosk has a roof and illuminated screen.
+4. Confirm the Putting Green is circular with a fringe, cup, pole, and flag.
+5. Confirm customers appear as varied R15 golfers, walk without sliding, hold a club, and perform a swing or putting motion.
+6. Confirm range shots fly outward and putting balls roll across the green before being cleaned up.
+7. Confirm customers still queue, pay, route correctly, and clean up when the owner leaves.
+8. Confirm customers appear at the central entrance plaza, follow the waiting lane, enter each range station from the rear aisle, and never cut through a queue rail or station divider.
+9. With four bays and a busy Putting Green, confirm queued range customers continue filling every available bay instead of being blocked by the putting customer.
+10. Confirm range customers stay in the six-position center queue while putting customers use the separate right-side waiting lane.
+11. Confirm finished golfers put away their clubs and leave on the side paths without crossing incoming customers.
+
+### Pro Shop
+
+1. Purchase the second driving-range bay and confirm the gold Pro Shop pad appears on the front-left development lawn.
+2. Attempt the purchase with less than $1,200 and confirm it is rejected without spending cash.
+3. Purchase the Pro Shop for $1,200 and confirm its storefront, sign, counter, and merchandise displays appear.
+4. Confirm the shop adds $30 after each 12-second revenue interval and also increases lifetime revenue.
+5. Rejoin with Studio persistence enabled and confirm the Pro Shop returns without another purchase pad and resumes generating revenue.
+6. Load an existing schema-3 save and confirm it migrates with the Pro Shop unowned while retaining existing progress.
 
 ## Architecture and security
 

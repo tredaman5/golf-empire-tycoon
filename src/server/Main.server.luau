@@ -17,11 +17,14 @@ feedbackEvent.Parent = remotes
 local managementEvent = Instance.new("RemoteEvent")
 managementEvent.Name = "Management"
 managementEvent.Parent = remotes
+local customerAnimationEvent = Instance.new("RemoteEvent")
+customerAnimationEvent.Name = "CustomerAnimation"
+customerAnimationEvent.Parent = remotes
 
 PlayerDataService:Init()
 CashService:Init(PlayerDataService)
 PlotService:Init(PlayerDataService)
-CustomerService:Init(PlayerDataService, CashService, PlotService, feedbackEvent)
+CustomerService:Init(PlayerDataService, CashService, PlotService, feedbackEvent, customerAnimationEvent)
 BusinessService:Init(PlayerDataService, CashService, PlotService, CustomerService, feedbackEvent, managementEvent)
 CustomerService:SetVisitCompletedCallback(function(player)
 	BusinessService:RefreshProgression(player)

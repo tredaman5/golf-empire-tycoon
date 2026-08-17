@@ -6,7 +6,7 @@ Config.DataStore = {
 	Name = "GolfEmpirePlayerData_v1",
 	StudioName = "GolfEmpirePlayerData_Studio_v1",
 	KeyPrefix = "Player_",
-	SchemaVersion = 3,
+	SchemaVersion = 4,
 	RetryCount = 3,
 	RetryDelay = 2,
 	AutosaveInterval = 60,
@@ -15,8 +15,9 @@ Config.DataStore = {
 
 Config.Plots = {
 	Count = 4,
-	Size = Vector3.new(90, 1, 70),
-	Spacing = 110,
+	Size = Vector3.new(140, 1, 190),
+	Spacing = 150,
+	RowSpacing = 200,
 }
 
 Config.Buildings = {
@@ -28,8 +29,13 @@ Config.Buildings = {
 }
 
 Config.DrivingRange = {
-	SecondBayPrice = 750,
-	MaxBayCount = 2,
+	BayUpgradePrices = {
+		[2] = 750,
+		[3] = 1500,
+		[4] = 2500,
+	},
+	MaxBayCount = 4,
+	ArrivalCapacityBoostPerBay = 0.75,
 	DefaultPricingStrategy = "Standard",
 	PricingOrder = { "Value", "Standard", "Premium" },
 	PricingStrategies = {
@@ -48,11 +54,19 @@ Config.PuttingGreen = {
 	VisitEvery = 3,
 }
 
+Config.ProShop = {
+	Price = 1200,
+	UnlockBayCount = 2,
+	RevenuePerTick = 30,
+	RevenueInterval = 12,
+}
+
 Config.Customers = {
 	SpawnInterval = 8,
 	ServiceDuration = 6,
 	WalkSpeed = 12,
-	MaxQueueSize = 3,
+	MaxQueueSize = 6,
+	MaxPuttingQueueSize = 3,
 }
 
 return Config
