@@ -20,6 +20,9 @@ local function defaultData()
 		OwnedBuildings = {},
 		BayCount = 0,
 		PricingStrategy = Config.DrivingRange.DefaultPricingStrategy,
+		CustomersServed = 0,
+		LifetimeRevenue = 0,
+		PuttingGreenOwned = false,
 		PlotId = nil,
 	}
 end
@@ -32,7 +35,7 @@ local function sanitizeSavedData(saved)
 		return nil, "Saved data is not a table."
 	end
 	local schemaVersion = saved.SchemaVersion
-	if schemaVersion ~= 1 and schemaVersion ~= Config.DataStore.SchemaVersion then
+	if schemaVersion ~= 1 and schemaVersion ~= 2 and schemaVersion ~= Config.DataStore.SchemaVersion then
 		return nil, `Unsupported data schema version: {tostring(schemaVersion)}`
 	end
 	if not isFiniteNumber(saved.Cash) or saved.Cash < 0 then
@@ -58,11 +61,23 @@ local function sanitizeSavedData(saved)
 	if typeof(pricingStrategy) ~= "string" or not Config.DrivingRange.PricingStrategies[pricingStrategy] then
 		return nil, "Saved pricing strategy is invalid."
 	end
+	local customersServed = if schemaVersion < 3 then 0 else saved.CustomersServed
+	local lifetimeRevenue = if schemaVersion < 3 then 0 else saved.LifetimeRevenue
+	local puttingGreenOwned = if schemaVersion < 3 then false else saved.PuttingGreenOwned
+	if typeof(customersServed) ~= "number" or customersServed % 1 ~= 0 or customersServed < 0 then
+		return nil, "Saved customer count is invalid."
+	end
+	if not isFiniteNumber(lifetimeRevenue) or lifetimeRevenue < 0 or typeof(puttingGreenOwned) ~= "boolean" then
+		return nil, "Saved progression is invalid."
+	end
 	return {
 		Cash = math.floor(saved.Cash),
 		OwnedBuildings = ownedBuildings,
 		BayCount = bayCount,
 		PricingStrategy = pricingStrategy,
+		CustomersServed = customersServed,
+		LifetimeRevenue = math.floor(lifetimeRevenue),
+		PuttingGreenOwned = puttingGreenOwned,
 		PlotId = nil,
 	}
 end
@@ -80,6 +95,9 @@ local function serializeData(data)
 		OwnedBuildings = ownedBuildings,
 		BayCount = data.BayCount,
 		PricingStrategy = data.PricingStrategy,
+		CustomersServed = data.CustomersServed,
+		LifetimeRevenue = data.LifetimeRevenue,
+		PuttingGreenOwned = data.PuttingGreenOwned,
 	}
 end
 
@@ -137,6 +155,11 @@ function PlayerDataService:Load(player: Player): boolean
 
 	records[player] = data
 	player:SetAttribute("Cash", data.Cash)
+	player:SetAttribute("PricingStrategy", data.PricingStrategy)
+	player:SetAttribute("CustomersServed", data.CustomersServed)
+	player:SetAttribute("LifetimeRevenue", data.LifetimeRevenue)
+	player:SetAttribute("BayCount", data.BayCount)
+	player:SetAttribute("PuttingGreenOwned", data.PuttingGreenOwned)
 	player:SetAttribute("DataLoaded", true)
 	return true
 end

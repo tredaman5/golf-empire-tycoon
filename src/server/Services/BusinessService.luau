@@ -8,6 +8,7 @@ local cashService
 local plotService
 local customerService
 local feedbackEvent
+local managementEvent
 local purchaseLocks = {}
 
 local function makePart(parent, name, size, position, color)
@@ -54,12 +55,21 @@ local function addPrompt(parent, actionText, objectText, callback)
 	return prompt
 end
 
-function BusinessService:Init(dataService, cash, plots, customers, remote)
+function BusinessService:Init(dataService, cash, plots, customers, remote, managementRemote)
 	playerDataService = dataService
 	cashService = cash
 	plotService = plots
 	customerService = customers
 	feedbackEvent = remote
+	managementEvent = managementRemote
+	managementEvent.OnServerEvent:Connect(function(player, action, value)
+		if action ~= "SetPricing" or typeof(value) ~= "string" or not Config.DrivingRange.PricingStrategies[value] then return end
+		local data = playerDataService:Get(player)
+		if not data or not data.OwnedBuildings.DrivingRangeBay or not plotService:GetPlayerPlot(player) then return end
+		data.PricingStrategy = value
+		player:SetAttribute("PricingStrategy", value)
+		feedbackEvent:FireClient(player, `{value} pricing selected.`)
+	end)
 end
 
 function BusinessService:_createManagementControls(player, content, plot)
@@ -68,22 +78,12 @@ function BusinessService:_createManagementControls(player, content, plot)
 		return
 	end
 	local kiosk = makePart(content, "ManagementKiosk", Vector3.new(6, 5, 4), plot.Origin + Vector3.new(26, 3, -18), Color3.fromRGB(25, 75, 45))
-	local pricingPrompt
-	pricingPrompt = addPrompt(kiosk, `Pricing: {data.PricingStrategy}`, "Driving Range Management", function(triggeringPlayer)
+	addPrompt(kiosk, "Open Dashboard", "Golf Business Management", function(triggeringPlayer)
 		if triggeringPlayer ~= player or not plotService:OwnsPlot(player, plot.Id) then
 			feedbackEvent:FireClient(triggeringPlayer, "You can only manage your own property.")
 			return
 		end
-		local currentData = playerDataService:Get(player)
-		if not currentData then
-			return
-		end
-		local currentIndex = table.find(Config.DrivingRange.PricingOrder, currentData.PricingStrategy) or 1
-		local nextIndex = currentIndex % #Config.DrivingRange.PricingOrder + 1
-		currentData.PricingStrategy = Config.DrivingRange.PricingOrder[nextIndex]
-		pricingPrompt.ActionText = `Pricing: {currentData.PricingStrategy}`
-		local strategy = Config.DrivingRange.PricingStrategies[currentData.PricingStrategy]
-		feedbackEvent:FireClient(player, `{currentData.PricingStrategy} pricing: ${strategy.CustomerPayment} per customer.`)
+		managementEvent:FireClient(player, "Open")
 	end)
 
 	if data.BayCount < Config.DrivingRange.MaxBayCount then
@@ -92,6 +92,61 @@ function BusinessService:_createManagementControls(player, content, plot)
 			self:PurchaseSecondBay(triggeringPlayer, plot.Id)
 		end)
 	end
+	self:RefreshProgression(player)
+end
+
+local function createPuttingGreen(content, origin)
+	if content:FindFirstChild("PuttingGreen") then return end
+	local model = Instance.new("Model")
+	model.Name = "PuttingGreen"
+	model.Parent = content
+	local green = makePart(model, "Green", Vector3.new(28, 0.6, 22), origin + Vector3.new(26, 1, 25), Color3.fromRGB(48, 145, 62))
+	green.Shape = Enum.PartType.Block
+	makePart(model, "Cup", Vector3.new(1.2, 0.2, 1.2), origin + Vector3.new(29, 1.4, 27), Color3.fromRGB(20, 20, 20))
+	makePart(model, "FlagPole", Vector3.new(0.25, 8, 0.25), origin + Vector3.new(29, 5, 27), Color3.fromRGB(235, 235, 235))
+	makePart(model, "Flag", Vector3.new(3, 2, 0.2), origin + Vector3.new(30.5, 8, 27), Color3.fromRGB(225, 55, 45))
+end
+
+function BusinessService:RefreshProgression(player)
+	local data = playerDataService:Get(player)
+	local plot = plotService:GetPlayerPlot(player)
+	local content = plot and plot.Model:FindFirstChild("PlayerBusiness")
+	if not data or not content or not data.OwnedBuildings.DrivingRangeBay then return end
+	if data.PuttingGreenOwned then
+		createPuttingGreen(content, plot.Origin)
+		return
+	end
+	local unlocked = data.CustomersServed >= Config.PuttingGreen.UnlockCustomers and data.LifetimeRevenue >= Config.PuttingGreen.UnlockRevenue
+	if unlocked and not content:FindFirstChild("PuttingGreenPurchasePad") then
+		local pad = makePart(content, "PuttingGreenPurchasePad", Vector3.new(12, 1, 12), plot.Origin + Vector3.new(26, 1, 25), Color3.fromRGB(180, 120, 220))
+		addPrompt(pad, `Build Putting Green - ${Config.PuttingGreen.Price}`, "Course Development", function(triggeringPlayer)
+			self:PurchasePuttingGreen(triggeringPlayer, plot.Id)
+		end)
+		feedbackEvent:FireClient(player, "Putting Green unlocked!")
+	end
+end
+
+function BusinessService:PurchasePuttingGreen(player, plotId)
+	if purchaseLocks[player] then return end
+	purchaseLocks[player] = true
+	local data = playerDataService:Get(player)
+	local unlocked = data and data.CustomersServed >= Config.PuttingGreen.UnlockCustomers and data.LifetimeRevenue >= Config.PuttingGreen.UnlockRevenue
+	local message
+	if not data or not plotService:OwnsPlot(player, plotId) or not unlocked then message = "Putting Green is not unlocked."
+	elseif data.PuttingGreenOwned then message = "You already own the Putting Green."
+	elseif not cashService:SpendCash(player, Config.PuttingGreen.Price) then message = "Not enough cash for the Putting Green."
+	else
+		data.PuttingGreenOwned = true
+		player:SetAttribute("PuttingGreenOwned", true)
+		local plot = plotService:GetPlayerPlot(player)
+		local content = plot.Model:FindFirstChild("PlayerBusiness")
+		local pad = content and content:FindFirstChild("PuttingGreenPurchasePad")
+		if pad then pad:Destroy() end
+		if content then createPuttingGreen(content, plot.Origin) end
+		message = "Putting Green opened!"
+	end
+	feedbackEvent:FireClient(player, message)
+	purchaseLocks[player] = nil
 end
 
 function BusinessService:PurchaseSecondBay(player: Player, plotId: number)
@@ -109,6 +164,7 @@ function BusinessService:PurchaseSecondBay(player: Player, plotId: number)
 		message = "Not enough cash for the second bay."
 	else
 		data.BayCount = 2
+		player:SetAttribute("BayCount", 2)
 		local plot = plotService:GetPlayerPlot(player)
 		local content = plot and plot.Model:FindFirstChild("PlayerBusiness")
 		if content then

@@ -6,7 +6,7 @@ Config.DataStore = {
 	Name = "GolfEmpirePlayerData_v1",
 	StudioName = "GolfEmpirePlayerData_Studio_v1",
 	KeyPrefix = "Player_",
-	SchemaVersion = 2,
+	SchemaVersion = 3,
 	RetryCount = 3,
 	RetryDelay = 2,
 	AutosaveInterval = 60,
@@ -37,6 +37,15 @@ Config.DrivingRange = {
 		Standard = { CustomerPayment = 25, SpawnInterval = 8 },
 		Premium = { CustomerPayment = 40, SpawnInterval = 13 },
 	},
+}
+
+Config.PuttingGreen = {
+	Price = 1000,
+	UnlockCustomers = 25,
+	UnlockRevenue = 750,
+	CustomerPayment = 35,
+	ServiceDuration = 8,
+	VisitEvery = 3,
 }
 
 Config.Customers = {

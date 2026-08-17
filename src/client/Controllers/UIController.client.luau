@@ -65,3 +65,63 @@ end
 
 local remotes = ReplicatedStorage:WaitForChild("GolfEmpireRemotes")
 remotes:WaitForChild("Feedback").OnClientEvent:Connect(showFeedback)
+local managementEvent = remotes:WaitForChild("Management")
+
+local dashboard = Instance.new("Frame")
+dashboard.Name = "BusinessDashboard"
+dashboard.AnchorPoint = Vector2.new(1, 0.5)
+dashboard.Position = UDim2.fromScale(0.98, 0.5)
+dashboard.Size = UDim2.fromOffset(330, 360)
+dashboard.BackgroundColor3 = Color3.fromRGB(20, 48, 30)
+dashboard.Visible = false
+dashboard.Parent = gui
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.Parent = dashboard
+
+local function makeDashboardText(text, height)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -20, 0, height)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.Font = Enum.Font.GothamSemibold
+	label.TextScaled = true
+	label.Text = text
+	label.Parent = dashboard
+	return label
+end
+
+makeDashboardText("GOLF BUSINESS", 48)
+local statsLabel = makeDashboardText("", 110)
+makeDashboardText("Pricing Strategy", 30)
+for _, strategyName in { "Value", "Standard", "Premium" } do
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -30, 0, 42)
+	button.BackgroundColor3 = Color3.fromRGB(45, 105, 60)
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.Font = Enum.Font.GothamBold
+	button.TextScaled = true
+	button.Text = strategyName
+	button.Parent = dashboard
+	button.Activated:Connect(function()
+		managementEvent:FireServer("SetPricing", strategyName)
+	end)
+end
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(1, -30, 0, 36)
+closeButton.Text = "Close"
+closeButton.Parent = dashboard
+closeButton.Activated:Connect(function() dashboard.Visible = false end)
+
+local function updateDashboard()
+	statsLabel.Text = `Strategy: {player:GetAttribute("PricingStrategy") or "Standard"}\nCustomers: {player:GetAttribute("CustomersServed") or 0}\nLifetime Revenue: ${player:GetAttribute("LifetimeRevenue") or 0}\nQueue: {player:GetAttribute("QueueLength") or 0} | Bays Busy: {player:GetAttribute("BaysOccupied") or 0}`
+end
+for _, attribute in { "PricingStrategy", "CustomersServed", "LifetimeRevenue", "QueueLength", "BaysOccupied" } do
+	player:GetAttributeChangedSignal(attribute):Connect(updateDashboard)
+end
+managementEvent.OnClientEvent:Connect(function(action)
+	if action == "Open" then updateDashboard(); dashboard.Visible = true end
+end)
+updateDashboard()

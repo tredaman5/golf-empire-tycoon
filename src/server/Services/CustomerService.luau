@@ -10,6 +10,7 @@ local plotService
 local feedbackEvent
 local states = {}
 local nextCustomerId = 0
+local visitCompletedCallback
 
 local CUSTOMER_COLORS = {
 	Color3.fromRGB(52, 120, 185),
@@ -128,12 +129,26 @@ local function runCustomer(state, customer)
 		if not moveCustomer(state, customer, getQueuePosition(state, queueIndex)) then
 			break
 		end
-		local bayIndex = if queueIndex == 1 then findAvailableBay(state) else nil
-		if bayIndex then
-			state.BayBusy[bayIndex] = true
+		local facilityType = customer:GetAttribute("FacilityType")
+		local serviceId
+		if queueIndex == 1 then
+			if facilityType == "PuttingGreen" then
+				serviceId = if not state.GreenBusy then "Green" else nil
+			else
+				serviceId = findAvailableBay(state)
+			end
+		end
+		if serviceId then
+			if serviceId == "Green" then state.GreenBusy = true else state.BayBusy[serviceId] = true end
 			dequeueCustomer(state, customer)
-			local servicePosition = getBayPosition(state, bayIndex)
-			local reachedBay = moveCustomer(state, customer, servicePosition)
+			local servicePosition = if serviceId == "Green" then state.Plot.Origin + Vector3.new(26, 3, 25) else getBayPosition(state, serviceId)
+			local reachedBay
+			if serviceId == "Green" then
+				local exteriorWaypoint = state.Plot.Origin + Vector3.new(26, 3, -3)
+				reachedBay = moveCustomer(state, customer, exteriorWaypoint) and moveCustomer(state, customer, servicePosition)
+			else
+				reachedBay = moveCustomer(state, customer, servicePosition)
+			end
 			local status
 			if reachedBay then
 				status = Instance.new("BillboardGui")
@@ -149,22 +164,28 @@ local function runCustomer(state, customer)
 				statusLabel.TextColor3 = Color3.new(1, 1, 1)
 				statusLabel.Font = Enum.Font.GothamSemibold
 				statusLabel.TextScaled = true
-				statusLabel.Text = "Practicing..."
+				statusLabel.Text = if serviceId == "Green" then "Putting..." else "Practicing..."
 				statusLabel.Parent = status
 			end
-			if reachedBay and waitWhileActive(state, Config.Customers.ServiceDuration) then
+			local serviceDuration = if serviceId == "Green" then Config.PuttingGreen.ServiceDuration else Config.Customers.ServiceDuration
+			if reachedBay and waitWhileActive(state, serviceDuration) then
 				local data = playerDataService:Get(state.Player)
-				local strategy = data and Config.DrivingRange.PricingStrategies[data.PricingStrategy]
-				if data and data.OwnedBuildings[state.BuildingId] and strategy then
-					if cashService:AddCash(state.Player, strategy.CustomerPayment) then
-						feedbackEvent:FireClient(state.Player, `Customer paid ${strategy.CustomerPayment}.`)
+				local payment = customer:GetAttribute("VisitPayment")
+				if data and data.OwnedBuildings[state.BuildingId] and typeof(payment) == "number" then
+					if cashService:AddCash(state.Player, payment) then
+						data.CustomersServed += 1
+						data.LifetimeRevenue += payment
+						state.Player:SetAttribute("CustomersServed", data.CustomersServed)
+						state.Player:SetAttribute("LifetimeRevenue", data.LifetimeRevenue)
+						feedbackEvent:FireClient(state.Player, `Customer paid ${payment}.`)
+						if visitCompletedCallback then visitCompletedCallback(state.Player) end
 					end
 				end
 			end
 			if status then
 				status:Destroy()
 			end
-			state.BayBusy[bayIndex] = false
+			if serviceId == "Green" then state.GreenBusy = false else state.BayBusy[serviceId] = false end
 			if isActive(state) and customer.Parent then
 				moveCustomer(state, customer, state.Plot.Origin + Vector3.new(28, 3, -25))
 			end
@@ -188,6 +209,10 @@ function CustomerService:Init(dataService, cash, plots, remote)
 	feedbackEvent = remote
 end
 
+function CustomerService:SetVisitCompletedCallback(callback)
+	visitCompletedCallback = callback
+end
+
 function CustomerService:StartForPlayer(player: Player, buildingId: string)
 	self:CleanupPlayer(player)
 	local plot = plotService:GetPlayerPlot(player)
@@ -205,6 +230,8 @@ function CustomerService:StartForPlayer(player: Player, buildingId: string)
 		Folder = folder,
 		Queue = {},
 		BayBusy = {},
+		GreenBusy = false,
+		SpawnedCount = 0,
 	}
 	states[player] = state
 
@@ -212,6 +239,13 @@ function CustomerService:StartForPlayer(player: Player, buildingId: string)
 		while isActive(state) do
 			if #state.Queue < Config.Customers.MaxQueueSize then
 				local customer = createCustomer(folder)
+				state.SpawnedCount += 1
+				local data = playerDataService:Get(player)
+				local useGreen = data and data.PuttingGreenOwned and state.SpawnedCount % Config.PuttingGreen.VisitEvery == 0
+				local strategy = data and Config.DrivingRange.PricingStrategies[data.PricingStrategy]
+				customer:SetAttribute("FacilityType", if useGreen then "PuttingGreen" else "DrivingRange")
+				local rangePayment = if strategy then strategy.CustomerPayment else Config.Buildings.DrivingRangeBay.CustomerPayment
+				customer:SetAttribute("VisitPayment", if useGreen then Config.PuttingGreen.CustomerPayment else rangePayment)
 				customer:PivotTo(CFrame.new(plot.Origin + Vector3.new(-28, 3, -25)))
 				table.insert(state.Queue, customer)
 				task.spawn(runCustomer, state, customer)
@@ -219,6 +253,10 @@ function CustomerService:StartForPlayer(player: Player, buildingId: string)
 			local data = playerDataService:Get(player)
 			local strategy = data and Config.DrivingRange.PricingStrategies[data.PricingStrategy]
 			local spawnInterval = if strategy then strategy.SpawnInterval else Config.Customers.SpawnInterval
+			player:SetAttribute("QueueLength", #state.Queue)
+			local occupied = 0
+			for _, busy in state.BayBusy do if busy then occupied += 1 end end
+			player:SetAttribute("BaysOccupied", occupied)
 			if not waitWhileActive(state, spawnInterval) then
 				break
 			end

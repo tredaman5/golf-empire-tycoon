@@ -4,7 +4,7 @@ A server-authoritative Roblox tycoon/management game about building, managing, a
 
 ## Current milestone
 
-Milestone 4 adds a visible second-bay expansion and driving-range pricing management. Players choose Value, Standard, or Premium pricing to trade customer demand against payment size, and can expand to serve two customers at once. Schema-1 saves migrate to schema 2 without losing cash or ownership.
+Milestone 5 adds a client business dashboard, persistent performance metrics, and the first course-development facility. Serving 25 customers and earning $750 lifetime revenue unlocks a $1,000 Putting Green with its own visitors and revenue. Older saves migrate to schema 3.
 
 Technology: Roblox Studio, Luau, Rojo, and Git.
 
@@ -91,6 +91,16 @@ The normal flow always affords the only purchase. To exercise this branch, tempo
 6. Leave and rejoin with Studio persistence enabled; confirm both bays and the selected pricing strategy return.
 7. Load an existing schema-1 save and confirm it becomes one bay with Standard pricing while retaining cash and ownership.
 
+### Business dashboard and putting green
+
+1. Use the green kiosk to open the dashboard and confirm pricing, customers served, lifetime revenue, queue length, and occupied bays are shown.
+2. Change pricing through the dashboard and confirm the server applies the selected strategy.
+3. Confirm each arriving customer keeps the payment quoted at arrival even if pricing changes during the visit.
+4. Reach 25 customers and $750 lifetime revenue; confirm the purple Putting Green purchase pad appears.
+5. Purchase the Putting Green for $1,000 and confirm the green, cup, pole, and flag appear.
+6. Confirm periodic customers use the Putting Green, display `Putting...`, and pay $35.
+7. Rejoin with persistence enabled and confirm metrics, pricing, bays, and Putting Green return.
+
 ## Architecture and security
 
 `Main` initializes services and owns player lifecycle. `PlayerDataService` validates versioned records, retries cloud operations, serializes saves, autosaves, and protects failed loads from destructive fallback saves. `CashService` is the sole currency writer. `PlotService` generates and assigns plots. `BusinessService` validates purchases and restores configured buildings. `CustomerService` manages cancellable customer lifecycles, queues, movement, and visit payments.
@@ -105,6 +115,6 @@ The server creates each purchase prompt and receives the triggering player's ide
 - Roblox Studio execution cannot be automated from this repository, so use the checklist above.
 - Playable golf, course design, prestige, monetization, and other future systems are out of scope.
 
-## Recommended Milestone 5
+## Recommended Milestone 6
 
-Add business performance reporting and the first course-development unlock so management decisions begin funding expansion beyond the driving range.
+Add playable putting so the owner can personally use the facility they built, beginning the `Build it. Manage it. Play it.` gameplay loop.

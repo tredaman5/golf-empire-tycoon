@@ -3,6 +3,9 @@ export type PlayerData = {
 	OwnedBuildings: { [string]: boolean },
 	BayCount: number,
 	PricingStrategy: string,
+	CustomersServed: number,
+	LifetimeRevenue: number,
+	PuttingGreenOwned: boolean,
 	PlotId: number?,
 }
 
@@ -12,6 +15,9 @@ export type SavedPlayerData = {
 	OwnedBuildings: { [string]: boolean },
 	BayCount: number,
 	PricingStrategy: string,
+	CustomersServed: number,
+	LifetimeRevenue: number,
+	PuttingGreenOwned: boolean,
 }
 
 export type BuildingConfig = {

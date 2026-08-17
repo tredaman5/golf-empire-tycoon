@@ -14,12 +14,18 @@ remotes.Parent = ReplicatedStorage
 local feedbackEvent = Instance.new("RemoteEvent")
 feedbackEvent.Name = "Feedback"
 feedbackEvent.Parent = remotes
+local managementEvent = Instance.new("RemoteEvent")
+managementEvent.Name = "Management"
+managementEvent.Parent = remotes
 
 PlayerDataService:Init()
 CashService:Init(PlayerDataService)
 PlotService:Init(PlayerDataService)
 CustomerService:Init(PlayerDataService, CashService, PlotService, feedbackEvent)
-BusinessService:Init(PlayerDataService, CashService, PlotService, CustomerService, feedbackEvent)
+BusinessService:Init(PlayerDataService, CashService, PlotService, CustomerService, feedbackEvent, managementEvent)
+CustomerService:SetVisitCompletedCallback(function(player)
+	BusinessService:RefreshProgression(player)
+end)
 PlayerDataService:StartAutosave()
 
 local function onPlayerAdded(player)
