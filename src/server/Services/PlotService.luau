@@ -57,6 +57,87 @@ local function addLamp(parent, position)
 	pointLight.Parent = light
 end
 
+local function addFlowerBed(parent, position, size)
+	local soil = makePart(parent, "FlowerBed", size, position + Vector3.new(0, 0.7, 0), Color3.fromRGB(82, 58, 40))
+	soil.Material = Enum.Material.Ground
+	for x = -size.X / 2 + 2, size.X / 2 - 2, 3 do
+		local flower = makePart(parent, "Flower", Vector3.new(1.2, 1.2, 1.2), position + Vector3.new(x, 1.5, 0), if math.floor(x) % 2 == 0 then Color3.fromRGB(245, 205, 75) else Color3.fromRGB(235, 235, 220))
+		flower.Shape = Enum.PartType.Ball
+		flower.Material = Enum.Material.Grass
+	end
+end
+
+local function createWorldInfrastructure(parent)
+	local world = Instance.new("Model")
+	world.Name = "GolfResortInfrastructure"
+	world.Parent = parent
+	local frontRoad = makePart(world, "ResortBoulevard", Vector3.new(310, 0.35, 18), Vector3.new(0, 0.42, -105), Color3.fromRGB(54, 59, 60))
+	frontRoad.Material = Enum.Material.Asphalt
+	local centerRoad = makePart(world, "CentralAccessRoad", Vector3.new(12, 0.35, 410), Vector3.new(0, 0.42, 95), Color3.fromRGB(54, 59, 60))
+	centerRoad.Material = Enum.Material.Asphalt
+	local middleRoad = makePart(world, "MiddleBoulevard", Vector3.new(310, 0.35, 10), Vector3.new(0, 0.42, 100), Color3.fromRGB(54, 59, 60))
+	middleRoad.Material = Enum.Material.Asphalt
+	for x = -145, 145, 12 do
+		local marking = makePart(world, "BoulevardMarking", Vector3.new(6, 0.05, 0.3), Vector3.new(x, 0.62, -105), Color3.fromRGB(235, 220, 150))
+		marking.Material = Enum.Material.SmoothPlastic
+	end
+	for z = -95, 295, 14 do
+		local marking = makePart(world, "AccessRoadMarking", Vector3.new(0.25, 0.05, 7), Vector3.new(0, 0.62, z), Color3.fromRGB(235, 220, 150))
+		marking.Material = Enum.Material.SmoothPlastic
+	end
+	for x = -145, 145, 12 do
+		local marking = makePart(world, "MiddleRoadMarking", Vector3.new(6, 0.05, 0.3), Vector3.new(x, 0.62, 100), Color3.fromRGB(235, 220, 150))
+		marking.Material = Enum.Material.SmoothPlastic
+	end
+	for _, z in { -115, -95 } do
+		local curb = makePart(world, "BoulevardCurb", Vector3.new(310, 0.55, 0.8), Vector3.new(0, 0.62, z), Color3.fromRGB(194, 190, 178))
+		curb.Material = Enum.Material.Concrete
+	end
+end
+
+local function configureLighting()
+	local Lighting = game:GetService("Lighting")
+	Lighting.ClockTime = 10.5
+	Lighting.Brightness = 2.4
+	Lighting.ExposureCompensation = 0.05
+	Lighting.Ambient = Color3.fromRGB(105, 115, 100)
+	Lighting.OutdoorAmbient = Color3.fromRGB(138, 150, 132)
+	Lighting.EnvironmentDiffuseScale = 0.45
+	Lighting.EnvironmentSpecularScale = 0.7
+	Lighting.ShadowSoftness = 0.35
+	for _, name in { "GolfEmpireAtmosphere", "GolfEmpireColor", "GolfEmpireBloom", "GolfEmpireSunRays" } do
+		local old = Lighting:FindFirstChild(name)
+		if old then old:Destroy() end
+	end
+	local atmosphere = Instance.new("Atmosphere")
+	atmosphere.Name = "GolfEmpireAtmosphere"
+	atmosphere.Density = 0.22
+	atmosphere.Offset = 0.1
+	atmosphere.Color = Color3.fromRGB(205, 225, 235)
+	atmosphere.Decay = Color3.fromRGB(105, 125, 105)
+	atmosphere.Glare = 0.08
+	atmosphere.Haze = 1.1
+	atmosphere.Parent = Lighting
+	local color = Instance.new("ColorCorrectionEffect")
+	color.Name = "GolfEmpireColor"
+	color.Brightness = 0.02
+	color.Contrast = 0.08
+	color.Saturation = 0.08
+	color.TintColor = Color3.fromRGB(248, 252, 240)
+	color.Parent = Lighting
+	local bloom = Instance.new("BloomEffect")
+	bloom.Name = "GolfEmpireBloom"
+	bloom.Intensity = 0.18
+	bloom.Size = 24
+	bloom.Threshold = 1.8
+	bloom.Parent = Lighting
+	local sunRays = Instance.new("SunRaysEffect")
+	sunRays.Name = "GolfEmpireSunRays"
+	sunRays.Intensity = 0.035
+	sunRays.Spread = 0.75
+	sunRays.Parent = Lighting
+end
+
 function PlotService:Init(dataService)
 	playerDataService = dataService
 	local old = workspace:FindFirstChild("GolfEmpirePlots")
@@ -66,11 +147,8 @@ function PlotService:Init(dataService)
 	local folder = Instance.new("Folder")
 	folder.Name = "GolfEmpirePlots"
 	folder.Parent = workspace
-	local Lighting = game:GetService("Lighting")
-	Lighting.ClockTime = 10.5
-	Lighting.Brightness = 2.2
-	Lighting.Ambient = Color3.fromRGB(115, 125, 105)
-	Lighting.OutdoorAmbient = Color3.fromRGB(145, 155, 135)
+	configureLighting()
+	createWorldInfrastructure(folder)
 
 	for id = 1, Config.Plots.Count do
 		local model = Instance.new("Model")
@@ -81,6 +159,17 @@ function PlotService:Init(dataService)
 		local origin = Vector3.new(column * Config.Plots.Spacing - Config.Plots.Spacing / 2, 0, row * Config.Plots.RowSpacing)
 		local ground = makePart(model, "Ground", Config.Plots.Size, origin, Color3.fromRGB(80 + id * 8, 145, 75))
 		ground.Material = Enum.Material.Grass
+		for _, edge in {
+			{ Vector3.new(0.7, 0.5, 190), Vector3.new(-69.5, 0.62, 0) },
+			{ Vector3.new(0.7, 0.5, 190), Vector3.new(69.5, 0.62, 0) },
+		} do
+			local curb = makePart(model, "PropertyCurb", edge[1], origin + edge[2], Color3.fromRGB(194, 190, 178))
+			curb.Material = Enum.Material.Concrete
+		end
+		for _, x in { -38, 38 } do
+			local curb = makePart(model, "FrontPropertyCurb", Vector3.new(64, 0.5, 0.7), origin + Vector3.new(x, 0.62, -94.5), Color3.fromRGB(194, 190, 178))
+			curb.Material = Enum.Material.Concrete
+		end
 		local path = makePart(model, "EntryPath", Vector3.new(10, 0.25, 88), origin + Vector3.new(0, 0.65, -45), Color3.fromRGB(205, 194, 165))
 		path.Material = Enum.Material.Cobblestone
 		local plaza = makePart(model, "ArrivalPlaza", Vector3.new(28, 0.22, 22), origin + Vector3.new(0, 0.67, -28), Color3.fromRGB(190, 185, 170))
@@ -102,6 +191,8 @@ function PlotService:Init(dataService)
 		for _, offset in { Vector3.new(-15, 0, -40), Vector3.new(15, 0, -40), Vector3.new(-15, 0, -16), Vector3.new(15, 0, -16) } do
 			addLamp(model, origin + offset)
 		end
+		addFlowerBed(model, origin + Vector3.new(-19, 0, -87), Vector3.new(18, 0.5, 5))
+		addFlowerBed(model, origin + Vector3.new(19, 0, -87), Vector3.new(18, 0.5, 5))
 		for _, offset in { Vector3.new(-64, 0.5, -87), Vector3.new(64, 0.5, -87), Vector3.new(-64, 0.5, 87), Vector3.new(64, 0.5, 87) } do
 			addTree(model, origin + offset, 0.8)
 		end
@@ -110,8 +201,14 @@ function PlotService:Init(dataService)
 			shrub.Shape = Enum.PartType.Ball
 			shrub.Material = Enum.Material.Grass
 		end
-		local sign = makePart(model, "Sign", Vector3.new(12, 5, 1), origin + Vector3.new(0, 3, -88), Color3.fromRGB(28, 82, 52))
+		for _, x in { -7, 7 } do
+			local pillar = makePart(model, "EntrancePillar", Vector3.new(1.4, 7, 1.4), origin + Vector3.new(x, 4, -88), Color3.fromRGB(218, 214, 198))
+			pillar.Material = Enum.Material.Concrete
+		end
+		local sign = makePart(model, "Sign", Vector3.new(15, 4.5, 1), origin + Vector3.new(0, 5, -88), Color3.fromRGB(28, 82, 52))
 		sign.Material = Enum.Material.Slate
+		local cap = makePart(model, "EntranceSignCap", Vector3.new(17, 0.45, 1.5), origin + Vector3.new(0, 7.5, -88), Color3.fromRGB(40, 48, 46))
+		cap.Material = Enum.Material.Metal
 		local label = addLabel(sign, `Plot {id} - Available`)
 		plots[id] = { Id = id, Model = model, Ground = ground, Origin = origin, Owner = nil, Label = label }
 	end

@@ -23,6 +23,23 @@ local function makePart(parent, name, size, position, color)
 	return part
 end
 
+local function addSurfaceText(part, text, face)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = face or Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.Parent = part
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.Font = Enum.Font.GothamBold
+	label.TextScaled = true
+	label.Parent = gui
+	return label
+end
+
 local function createPropertyLayout(parent, origin)
 	local layout = Instance.new("Model")
 	layout.Name = "PropertyLayout"
@@ -37,6 +54,12 @@ local function createPropertyLayout(parent, origin)
 		local cabin = makePart(car, "Cabin", Vector3.new(5.4, 2.2, 5), position + Vector3.new(0, 3.1, 0.5), Color3.fromRGB(42, 55, 62))
 		cabin.Material = Enum.Material.Glass
 		cabin.Transparency = 0.2
+		local frontBumper = makePart(car, "FrontBumper", Vector3.new(6.2, 0.5, 0.5), position + Vector3.new(0, 1.2, -5.1), Color3.fromRGB(195, 198, 192))
+		frontBumper.Material = Enum.Material.Metal
+		for _, x in { -2, 2 } do
+			local headlight = makePart(car, "Headlight", Vector3.new(1.1, 0.6, 0.2), position + Vector3.new(x, 1.8, -5.05), Color3.fromRGB(255, 236, 175))
+			headlight.Material = Enum.Material.Neon
+		end
 		for _, offset in { Vector3.new(-3.3, 0.8, -3), Vector3.new(3.3, 0.8, -3), Vector3.new(-3.3, 0.8, 3), Vector3.new(3.3, 0.8, 3) } do
 			local wheel = makePart(car, "Wheel", Vector3.new(1, 2.2, 2.2), position + offset, Color3.fromRGB(28, 30, 30))
 			wheel.Shape = Enum.PartType.Cylinder
@@ -54,6 +77,10 @@ local function createPropertyLayout(parent, origin)
 		floor.Material = Enum.Material.Metal
 		local seat = makePart(cart, "Seat", Vector3.new(4.2, 1.2, 1.8), position + Vector3.new(0, 2.8, 0.8), Color3.fromRGB(225, 220, 195))
 		seat.Material = Enum.Material.Fabric
+		local dash = makePart(cart, "Dashboard", Vector3.new(4, 1, 0.6), position + Vector3.new(0, 3.2, -1.7), Color3.fromRGB(55, 62, 60))
+		dash.Material = Enum.Material.Metal
+		local steeringColumn = makePart(cart, "SteeringColumn", Vector3.new(0.25, 1.8, 0.25), position + Vector3.new(-1, 4, -1.5), Color3.fromRGB(40, 45, 44))
+		steeringColumn.Material = Enum.Material.Metal
 		local roof = makePart(cart, "Roof", Vector3.new(5.4, 0.4, 7), position + Vector3.new(0, 6.2, 0), Color3.fromRGB(235, 235, 220))
 		roof.Material = Enum.Material.SmoothPlastic
 		for _, x in { -2, 2 } do
@@ -129,6 +156,9 @@ local function createFacility(parent, origin, bayCount)
 	foundation.Material = Enum.Material.Slate
 	local canopy = makePart(model, "SharedCanopy", Vector3.new(width + 3, 0.8, 12), origin + Vector3.new(0, 9, 7), Color3.fromRGB(35, 48, 52))
 	canopy.Material = Enum.Material.Metal
+	local rangeHeader = makePart(model, "RangeHeader", Vector3.new(math.min(width + 1, 34), 1.6, 0.45), origin + Vector3.new(0, 9.1, 0.75), Color3.fromRGB(24, 88, 55))
+	rangeHeader.Material = Enum.Material.Slate
+	addSurfaceText(rangeHeader, "PRACTICE RANGE")
 	local rearBeam = makePart(model, "RearSupportBeam", Vector3.new(width + 2, 0.65, 0.65), origin + Vector3.new(0, 7.8, 2.2), Color3.fromRGB(225, 230, 225))
 	rearBeam.Material = Enum.Material.Metal
 	for _, x in { -(width / 2), width / 2 } do
@@ -154,6 +184,17 @@ local function createFacility(parent, origin, bayCount)
 	createTarget("NearTarget", -13, 31, 8, Color3.fromRGB(65, 115, 205))
 	createTarget("MidTarget", 14, 55, 11, Color3.fromRGB(225, 170, 45))
 	createTarget("FarTarget", -7, 82, 14, Color3.fromRGB(205, 70, 60))
+	for _, marker in {
+		{ 31, "50 YDS" },
+		{ 55, "100 YDS" },
+		{ 82, "150 YDS" },
+	} do
+		local post = makePart(model, "DistanceMarkerPost", Vector3.new(0.3, 4, 0.3), origin + Vector3.new(-28, 2.8, marker[1]), Color3.fromRGB(52, 60, 58))
+		post.Material = Enum.Material.Metal
+		local sign = makePart(model, "DistanceMarker", Vector3.new(5, 2, 0.3), origin + Vector3.new(-28, 5.2, marker[1]), Color3.fromRGB(30, 82, 52))
+		sign.Material = Enum.Material.Slate
+		addSurfaceText(sign, marker[2], Enum.NormalId.Back)
+	end
 
 	local leftNet = makePart(model, "LeftSafetyNet", Vector3.new(0.25, 20, 78), origin + Vector3.new(-32.5, 10.5, 54), Color3.fromRGB(25, 70, 45))
 	local rightNet = makePart(model, "RightSafetyNet", Vector3.new(0.25, 20, 78), origin + Vector3.new(32.5, 10.5, 54), Color3.fromRGB(25, 70, 45))
@@ -175,7 +216,22 @@ local function createFacility(parent, origin, bayCount)
 		local bay = Instance.new("Model")
 		bay.Name = `Bay{bayIndex}`
 		bay.Parent = model
-		makePart(bay, "HittingMat", Vector3.new(10, 0.5, 8), bayOrigin + Vector3.new(0, 1, 8), Color3.fromRGB(35, 105, 45))
+		local mat = makePart(bay, "HittingMat", Vector3.new(10, 0.5, 8), bayOrigin + Vector3.new(0, 1, 8), Color3.fromRGB(35, 105, 45))
+		mat.Material = Enum.Material.Fabric
+		local stationSign = makePart(bay, "StationSign", Vector3.new(4, 1.5, 0.3), bayOrigin + Vector3.new(0, 7.1, 1.6), Color3.fromRGB(45, 58, 56))
+		stationSign.Material = Enum.Material.Metal
+		addSurfaceText(stationSign, `BAY {bayIndex}`)
+		local bayLight = makePart(bay, "BayLight", Vector3.new(5, 0.18, 1), bayOrigin + Vector3.new(0, 8.48, 7), Color3.fromRGB(255, 232, 180))
+		bayLight.Material = Enum.Material.Neon
+		local surfaceLight = Instance.new("SurfaceLight")
+		surfaceLight.Face = Enum.NormalId.Bottom
+		surfaceLight.Brightness = 1.2
+		surfaceLight.Range = 12
+		surfaceLight.Angle = 100
+		surfaceLight.Color = bayLight.Color
+		surfaceLight.Parent = bayLight
+		local tee = makePart(bay, "PracticeTee", Vector3.new(0.35, 0.45, 0.35), bayOrigin + Vector3.new(0, 1.45, 10.5), Color3.fromRGB(238, 238, 225))
+		tee.Shape = Enum.PartType.Cylinder
 		if bayIndex < bayCount then
 			local divider = makePart(bay, "StationDivider", Vector3.new(0.3, 2.5, 8), bayOrigin + Vector3.new(8, 2.4, 7), Color3.fromRGB(70, 85, 82))
 			divider.Material = Enum.Material.Metal
@@ -222,11 +278,12 @@ function BusinessService:_createManagementControls(player, content, plot)
 		return
 	end
 	local kiosk = makePart(content, "ManagementKiosk", Vector3.new(6, 5, 4), plot.Origin + Vector3.new(48, 3, -28), Color3.fromRGB(25, 75, 45))
-	kiosk.Material = Enum.Material.WoodPlanks
+	kiosk.Material = Enum.Material.Slate
 	local kioskRoof = makePart(content, "ManagementKioskRoof", Vector3.new(8, 0.8, 6), plot.Origin + Vector3.new(48, 6, -28), Color3.fromRGB(45, 48, 42))
 	kioskRoof.Material = Enum.Material.Slate
 	local screen = makePart(content, "ManagementScreen", Vector3.new(3.5, 2.2, 0.2), plot.Origin + Vector3.new(48, 3.7, -25.9), Color3.fromRGB(70, 170, 115))
 	screen.Material = Enum.Material.Neon
+	addSurfaceText(screen, "MANAGE")
 	addPrompt(kiosk, "Open Dashboard", "Golf Business Management", function(triggeringPlayer)
 		if triggeringPlayer ~= player or not plotService:OwnsPlot(player, plot.Id) then
 			feedbackEvent:FireClient(triggeringPlayer, "You can only manage your own property.")
@@ -262,6 +319,18 @@ local function createPuttingGreen(content, origin)
 	makePart(model, "Cup", Vector3.new(1.2, 0.2, 1.2), origin + Vector3.new(53, 1.4, 27), Color3.fromRGB(20, 20, 20))
 	makePart(model, "FlagPole", Vector3.new(0.25, 8, 0.25), origin + Vector3.new(53, 5, 27), Color3.fromRGB(235, 235, 235))
 	makePart(model, "Flag", Vector3.new(3, 2, 0.2), origin + Vector3.new(54.5, 8, 27), Color3.fromRGB(225, 55, 45))
+	local bunker = makePart(model, "PracticeBunker", Vector3.new(0.35, 9, 9), origin + Vector3.new(42, 0.8, 43), Color3.fromRGB(220, 205, 165))
+	bunker.Shape = Enum.PartType.Cylinder
+	bunker.Orientation = Vector3.new(0, 0, 90)
+	bunker.Material = Enum.Material.Sand
+	local bagStand = makePart(model, "BagStand", Vector3.new(4, 3.5, 1.4), origin + Vector3.new(62, 2.4, 18), Color3.fromRGB(48, 68, 62))
+	bagStand.Material = Enum.Material.Metal
+	for _, x in { 60.8, 62, 63.2 } do
+		local club = makePart(model, "PracticePutter", Vector3.new(0.18, 4, 0.18), origin + Vector3.new(x, 4.6, 18), Color3.fromRGB(70, 72, 75))
+		club.Material = Enum.Material.Metal
+	end
+	local greenBench = makePart(model, "PuttingBench", Vector3.new(7, 0.7, 1.6), origin + Vector3.new(58, 1.7, 42), Color3.fromRGB(58, 76, 70))
+	greenBench.Material = Enum.Material.Metal
 end
 
 local function createProShop(content, origin)
@@ -289,19 +358,19 @@ local function createProShop(content, origin)
 		window.Material = Enum.Material.Glass
 		window.Transparency = 0.25
 	end
-	local header = makePart(model, "ProShopHeader", Vector3.new(18, 2.5, 0.5), center + Vector3.new(0, 8.2, -12), Color3.fromRGB(25, 90, 55))
+	local door = makePart(model, "StorefrontDoor", Vector3.new(4, 7, 0.3), center + Vector3.new(0, 4.8, -11.9), Color3.fromRGB(55, 112, 105))
+	door.Material = Enum.Material.Glass
+	door.Transparency = 0.18
+	door.CanCollide = false
+	local handle = makePart(model, "DoorHandle", Vector3.new(0.18, 1.1, 0.18), center + Vector3.new(1.3, 4.8, -12.15), Color3.fromRGB(215, 185, 95))
+	handle.Material = Enum.Material.Metal
+	local awning = makePart(model, "StorefrontAwning", Vector3.new(20, 0.5, 3), center + Vector3.new(0, 8.8, -13), Color3.fromRGB(32, 104, 63))
+	awning.Material = Enum.Material.Fabric
+	local welcomeMat = makePart(model, "WelcomeMat", Vector3.new(6, 0.15, 3), center + Vector3.new(0, 1.48, -13.5), Color3.fromRGB(38, 64, 54))
+	welcomeMat.Material = Enum.Material.Fabric
+	local header = makePart(model, "ProShopHeader", Vector3.new(18, 2.5, 0.5), center + Vector3.new(0, 11.75, -13.3), Color3.fromRGB(25, 90, 55))
 	header.Material = Enum.Material.Slate
-	local signGui = Instance.new("SurfaceGui")
-	signGui.Face = Enum.NormalId.Front
-	signGui.Parent = header
-	local signText = Instance.new("TextLabel")
-	signText.Size = UDim2.fromScale(1, 1)
-	signText.BackgroundTransparency = 1
-	signText.Text = "PRO SHOP"
-	signText.TextColor3 = Color3.new(1, 1, 1)
-	signText.Font = Enum.Font.GothamBold
-	signText.TextScaled = true
-	signText.Parent = signGui
+	addSurfaceText(header, "PRO SHOP")
 	local counter = makePart(model, "SalesCounter", Vector3.new(10, 3, 2.5), center + Vector3.new(7, 2.8, 6), Color3.fromRGB(55, 78, 70))
 	counter.Material = Enum.Material.Metal
 	for index, x in { -8, 0, 8 } do
@@ -309,6 +378,23 @@ local function createProShop(content, origin)
 		display.Material = Enum.Material.SmoothPlastic
 		local merchandise = makePart(model, "GolfMerchandise", Vector3.new(2.8, 1.2, 1.4), center + Vector3.new(x, 5.4, 2), if index == 1 then Color3.fromRGB(55, 125, 75) elseif index == 2 then Color3.fromRGB(235, 190, 55) else Color3.fromRGB(65, 105, 175))
 		merchandise.Material = Enum.Material.Fabric
+	end
+	for _, x in { -10, 10 } do
+		local planter = makePart(model, "StorefrontPlanter", Vector3.new(3.5, 1.5, 3.5), center + Vector3.new(x, 2, -13.5), Color3.fromRGB(90, 75, 55))
+		planter.Material = Enum.Material.Slate
+		local plant = makePart(model, "StorefrontPlant", Vector3.new(3, 3, 3), center + Vector3.new(x, 4, -13.5), Color3.fromRGB(45, 125, 62))
+		plant.Shape = Enum.PartType.Ball
+		plant.Material = Enum.Material.Grass
+	end
+	for _, x in { -8, 8 } do
+		local ceilingLight = makePart(model, "ShopCeilingLight", Vector3.new(5, 0.18, 1), center + Vector3.new(x, 9.45, 2), Color3.fromRGB(255, 232, 180))
+		ceilingLight.Material = Enum.Material.Neon
+		local light = Instance.new("SurfaceLight")
+		light.Face = Enum.NormalId.Bottom
+		light.Brightness = 1
+		light.Range = 14
+		light.Color = ceilingLight.Color
+		light.Parent = ceilingLight
 	end
 end
 
