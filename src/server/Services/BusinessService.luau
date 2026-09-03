@@ -105,7 +105,7 @@ local function createPropertyLayout(parent, origin)
 	waitingLane.Material = Enum.Material.Pavement
 	local puttingWaitingLane = makePart(layout, "PuttingWaitingLane", Vector3.new(30, 0.16, 7), origin + Vector3.new(30, 0.82, -18), Color3.fromRGB(175, 170, 155))
 	puttingWaitingLane.Material = Enum.Material.Pavement
-	local rangeExitPath = makePart(layout, "RangeCustomerExitPath", Vector3.new(7, 0.16, 30), origin + Vector3.new(-18, 0.8, -33), Color3.fromRGB(205, 194, 165))
+	local rangeExitPath = makePart(layout, "RangeCustomerExitPath", Vector3.new(7, 0.16, 30), origin + Vector3.new(-18, 0.88, -33), Color3.fromRGB(205, 194, 165))
 	rangeExitPath.Material = Enum.Material.Cobblestone
 	local puttingExitPath = makePart(layout, "PuttingCustomerExitPath", Vector3.new(7, 0.16, 30), origin + Vector3.new(60, 0.8, -33), Color3.fromRGB(205, 194, 165))
 	puttingExitPath.Material = Enum.Material.Cobblestone
@@ -127,7 +127,7 @@ local function createPropertyLayout(parent, origin)
 		rail.Material = Enum.Material.Metal
 	end
 
-	local clubhouseLawn = makePart(layout, "FutureClubhouseLawn", Vector3.new(30, 0.12, 24), origin + Vector3.new(-48, 0.72, -4), Color3.fromRGB(67, 132, 63))
+	local clubhouseLawn = makePart(layout, "FutureClubhouseLawn", Vector3.new(30, 0.12, 24), origin + Vector3.new(-48, 0.55, -4), Color3.fromRGB(67, 132, 63))
 	clubhouseLawn.Material = Enum.Material.Grass
 	for _, offset in { Vector3.new(-64, 1.6, -15), Vector3.new(-32, 1.6, -15), Vector3.new(-64, 1.6, 8), Vector3.new(-32, 1.6, 8) } do
 		local shrub = makePart(layout, "DevelopmentShrub", Vector3.new(4, 3, 4), origin + offset, Color3.fromRGB(40, 112, 54))
@@ -366,7 +366,7 @@ local function createProShop(content, origin)
 	handle.Material = Enum.Material.Metal
 	local awning = makePart(model, "StorefrontAwning", Vector3.new(20, 0.5, 3), center + Vector3.new(0, 8.8, -13), Color3.fromRGB(32, 104, 63))
 	awning.Material = Enum.Material.Fabric
-	local welcomeMat = makePart(model, "WelcomeMat", Vector3.new(6, 0.15, 3), center + Vector3.new(0, 1.48, -13.5), Color3.fromRGB(38, 64, 54))
+	local welcomeMat = makePart(model, "WelcomeMat", Vector3.new(6, 0.15, 3), center + Vector3.new(0, 1.55, -13.5), Color3.fromRGB(38, 64, 54))
 	welcomeMat.Material = Enum.Material.Fabric
 	local header = makePart(model, "ProShopHeader", Vector3.new(18, 2.5, 0.5), center + Vector3.new(0, 11.75, -13.3), Color3.fromRGB(25, 90, 55))
 	header.Material = Enum.Material.Slate

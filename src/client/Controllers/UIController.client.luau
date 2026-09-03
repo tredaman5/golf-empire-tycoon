@@ -8,29 +8,66 @@ gui.Name = "GolfEmpireUI"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
+local Theme = {
+	Panel = Color3.fromRGB(22, 30, 27),
+	PanelBorder = Color3.fromRGB(70, 150, 95),
+	Accent = Color3.fromRGB(225, 190, 65),
+	Button = Color3.fromRGB(35, 95, 55),
+	ButtonClose = Color3.fromRGB(60, 68, 66),
+	Text = Color3.new(1, 1, 1),
+	TextDark = Color3.fromRGB(20, 20, 20),
+	CornerRadius = UDim.new(0, 10),
+	HeaderFont = Enum.Font.GothamBold,
+	BodyFont = Enum.Font.GothamSemibold,
+}
+
+local function applyPanelStyle(instance, borderColor)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = Theme.CornerRadius
+	corner.Parent = instance
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = borderColor or Theme.PanelBorder
+	stroke.Thickness = 2
+	stroke.Parent = instance
+end
+
 local cashLabel = Instance.new("TextLabel")
 cashLabel.Name = "CashLabel"
 cashLabel.Position = UDim2.fromOffset(20, 20)
 cashLabel.Size = UDim2.fromOffset(230, 54)
-cashLabel.BackgroundColor3 = Color3.fromRGB(20, 55, 30)
-cashLabel.BackgroundTransparency = 0.1
-cashLabel.TextColor3 = Color3.new(1, 1, 1)
-cashLabel.Font = Enum.Font.GothamBold
+cashLabel.BackgroundColor3 = Theme.Panel
+cashLabel.BackgroundTransparency = 0.05
+cashLabel.TextColor3 = Theme.Accent
+cashLabel.Font = Theme.HeaderFont
 cashLabel.TextScaled = true
 cashLabel.Parent = gui
+applyPanelStyle(cashLabel)
+local cashPadding = Instance.new("UIPadding")
+cashPadding.PaddingLeft = UDim.new(0, 14)
+cashPadding.PaddingRight = UDim.new(0, 14)
+cashPadding.Parent = cashLabel
 
 local feedbackLabel = Instance.new("TextLabel")
 feedbackLabel.Name = "FeedbackLabel"
 feedbackLabel.AnchorPoint = Vector2.new(0.5, 0)
 feedbackLabel.Position = UDim2.fromScale(0.5, 0.08)
-feedbackLabel.Size = UDim2.fromOffset(360, 40)
-feedbackLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-feedbackLabel.BackgroundTransparency = 0.15
-feedbackLabel.TextColor3 = Color3.new(1, 1, 1)
-feedbackLabel.Font = Enum.Font.GothamSemibold
-feedbackLabel.TextSize = 22
+feedbackLabel.Size = UDim2.fromOffset(380, 0)
+feedbackLabel.AutomaticSize = Enum.AutomaticSize.Y
+feedbackLabel.BackgroundColor3 = Theme.Panel
+feedbackLabel.BackgroundTransparency = 0.05
+feedbackLabel.TextColor3 = Theme.Text
+feedbackLabel.Font = Theme.BodyFont
+feedbackLabel.TextSize = 20
+feedbackLabel.TextWrapped = true
 feedbackLabel.Visible = false
 feedbackLabel.Parent = gui
+applyPanelStyle(feedbackLabel)
+local feedbackPadding = Instance.new("UIPadding")
+feedbackPadding.PaddingTop = UDim.new(0, 8)
+feedbackPadding.PaddingBottom = UDim.new(0, 8)
+feedbackPadding.PaddingLeft = UDim.new(0, 16)
+feedbackPadding.PaddingRight = UDim.new(0, 16)
+feedbackPadding.Parent = feedbackLabel
 
 local function updateCash()
 	local cash = player:GetAttribute("Cash")
@@ -132,52 +169,88 @@ local dashboard = Instance.new("Frame")
 dashboard.Name = "BusinessDashboard"
 dashboard.AnchorPoint = Vector2.new(1, 0.5)
 dashboard.Position = UDim2.fromScale(0.98, 0.5)
-dashboard.Size = UDim2.fromOffset(330, 360)
-dashboard.BackgroundColor3 = Color3.fromRGB(20, 48, 30)
+dashboard.Size = UDim2.fromOffset(330, 380)
+dashboard.BackgroundColor3 = Theme.Panel
+dashboard.BackgroundTransparency = 0.05
 dashboard.Visible = false
 dashboard.Parent = gui
+applyPanelStyle(dashboard, Theme.Accent)
+
+local dashboardPadding = Instance.new("UIPadding")
+dashboardPadding.PaddingTop = UDim.new(0, 16)
+dashboardPadding.PaddingBottom = UDim.new(0, 16)
+dashboardPadding.PaddingLeft = UDim.new(0, 16)
+dashboardPadding.PaddingRight = UDim.new(0, 16)
+dashboardPadding.Parent = dashboard
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 8)
+layout.Padding = UDim.new(0, 10)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = dashboard
 
 local function makeDashboardText(text, height)
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -20, 0, height)
+	label.Size = UDim2.new(1, 0, 0, height)
 	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.Font = Enum.Font.GothamSemibold
+	label.TextColor3 = Theme.Text
+	label.Font = Theme.BodyFont
 	label.TextScaled = true
 	label.Text = text
 	label.Parent = dashboard
 	return label
 end
 
-makeDashboardText("GOLF BUSINESS", 48)
+local header = makeDashboardText("GOLF BUSINESS", 40)
+header.Font = Theme.HeaderFont
+header.TextColor3 = Theme.Accent
 local statsLabel = makeDashboardText("", 110)
-makeDashboardText("Pricing Strategy", 30)
+statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+local pricingHeader = makeDashboardText("Pricing Strategy", 26)
+pricingHeader.TextColor3 = Color3.fromRGB(200, 205, 195)
+
+local pricingButtons = {}
 for _, strategyName in { "Value", "Standard", "Premium" } do
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, -30, 0, 42)
-	button.BackgroundColor3 = Color3.fromRGB(45, 105, 60)
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.GothamBold
+	button.Size = UDim2.new(1, 0, 0, 42)
+	button.BackgroundColor3 = Theme.Button
+	button.TextColor3 = Theme.Text
+	button.Font = Theme.HeaderFont
 	button.TextScaled = true
+	button.AutoButtonColor = false
 	button.Text = strategyName
 	button.Parent = dashboard
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = Theme.CornerRadius
+	corner.Parent = button
 	button.Activated:Connect(function()
 		managementEvent:FireServer("SetPricing", strategyName)
 	end)
+	pricingButtons[strategyName] = button
 end
+
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(1, -30, 0, 36)
+closeButton.Size = UDim2.new(1, 0, 0, 36)
+closeButton.BackgroundColor3 = Theme.ButtonClose
+closeButton.TextColor3 = Theme.Text
+closeButton.Font = Theme.BodyFont
+closeButton.TextScaled = true
+closeButton.AutoButtonColor = false
 closeButton.Text = "Close"
 closeButton.Parent = dashboard
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = Theme.CornerRadius
+closeCorner.Parent = closeButton
 closeButton.Activated:Connect(function() dashboard.Visible = false end)
 
 local function updateDashboard()
-	statsLabel.Text = `Strategy: {player:GetAttribute("PricingStrategy") or "Standard"}\nCustomers: {player:GetAttribute("CustomersServed") or 0}\nLifetime Revenue: ${player:GetAttribute("LifetimeRevenue") or 0}\nQueue: {player:GetAttribute("QueueLength") or 0} | Bays Busy: {player:GetAttribute("BaysOccupied") or 0}`
+	local strategy = player:GetAttribute("PricingStrategy") or "Standard"
+	statsLabel.Text = `Strategy: {strategy}\nCustomers: {player:GetAttribute("CustomersServed") or 0}\nLifetime Revenue: ${player:GetAttribute("LifetimeRevenue") or 0}\nQueue: {player:GetAttribute("QueueLength") or 0} | Bays Busy: {player:GetAttribute("BaysOccupied") or 0}`
+	for strategyName, button in pricingButtons do
+		local active = strategyName == strategy
+		button.BackgroundColor3 = active and Theme.Accent or Theme.Button
+		button.TextColor3 = active and Theme.TextDark or Theme.Text
+	end
 end
 for _, attribute in { "PricingStrategy", "CustomersServed", "LifetimeRevenue", "QueueLength", "BaysOccupied" } do
 	player:GetAttributeChangedSignal(attribute):Connect(updateDashboard)
