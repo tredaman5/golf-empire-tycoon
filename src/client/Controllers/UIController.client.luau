@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local player = Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
@@ -68,6 +69,114 @@ feedbackPadding.PaddingBottom = UDim.new(0, 8)
 feedbackPadding.PaddingLeft = UDim.new(0, 16)
 feedbackPadding.PaddingRight = UDim.new(0, 16)
 feedbackPadding.Parent = feedbackLabel
+
+local promptGui = Instance.new("BillboardGui")
+promptGui.Name = "PromptGui"
+promptGui.Size = UDim2.fromOffset(260, 86)
+promptGui.StudsOffsetWorldSpace = Vector3.new(0, 3, 0)
+promptGui.AlwaysOnTop = true
+promptGui.Enabled = false
+promptGui.Parent = gui
+
+local promptFrame = Instance.new("Frame")
+promptFrame.Size = UDim2.fromScale(1, 1)
+promptFrame.BackgroundColor3 = Theme.Panel
+promptFrame.BackgroundTransparency = 0.05
+promptFrame.Parent = promptGui
+applyPanelStyle(promptFrame)
+
+local promptPadding = Instance.new("UIPadding")
+promptPadding.PaddingTop = UDim.new(0, 10)
+promptPadding.PaddingBottom = UDim.new(0, 10)
+promptPadding.PaddingLeft = UDim.new(0, 14)
+promptPadding.PaddingRight = UDim.new(0, 14)
+promptPadding.Parent = promptFrame
+
+local promptObjectText = Instance.new("TextLabel")
+promptObjectText.Position = UDim2.fromOffset(0, 0)
+promptObjectText.Size = UDim2.new(1, 0, 0, 20)
+promptObjectText.BackgroundTransparency = 1
+promptObjectText.Font = Theme.BodyFont
+promptObjectText.TextColor3 = Color3.fromRGB(200, 205, 195)
+promptObjectText.TextScaled = true
+promptObjectText.TextXAlignment = Enum.TextXAlignment.Left
+promptObjectText.Parent = promptFrame
+
+local promptActionText = Instance.new("TextLabel")
+promptActionText.Position = UDim2.fromOffset(0, 22)
+promptActionText.Size = UDim2.new(1, 0, 0, 28)
+promptActionText.BackgroundTransparency = 1
+promptActionText.Font = Theme.HeaderFont
+promptActionText.TextColor3 = Theme.Text
+promptActionText.TextScaled = true
+promptActionText.TextXAlignment = Enum.TextXAlignment.Left
+promptActionText.Parent = promptFrame
+
+local promptBarTrack = Instance.new("Frame")
+promptBarTrack.Position = UDim2.new(0, 0, 1, -8)
+promptBarTrack.Size = UDim2.new(1, 0, 0, 6)
+promptBarTrack.BackgroundColor3 = Color3.fromRGB(50, 58, 55)
+promptBarTrack.BorderSizePixel = 0
+promptBarTrack.Parent = promptFrame
+local barTrackCorner = Instance.new("UICorner")
+barTrackCorner.CornerRadius = UDim.new(1, 0)
+barTrackCorner.Parent = promptBarTrack
+
+local promptBarFill = Instance.new("Frame")
+promptBarFill.Size = UDim2.new(0, 0, 1, 0)
+promptBarFill.BackgroundColor3 = Theme.Accent
+promptBarFill.BorderSizePixel = 0
+promptBarFill.Parent = promptBarTrack
+local barFillCorner = Instance.new("UICorner")
+barFillCorner.CornerRadius = UDim.new(1, 0)
+barFillCorner.Parent = promptBarFill
+
+local activePrompt = nil
+local holdConnection = nil
+
+local function stopHoldAnimation()
+	if holdConnection then
+		holdConnection:Disconnect()
+		holdConnection = nil
+	end
+	promptBarFill.Size = UDim2.new(0, 0, 1, 0)
+end
+
+ProximityPromptService.PromptShown:Connect(function(prompt)
+	activePrompt = prompt
+	promptObjectText.Text = prompt.ObjectText
+	promptActionText.Text = prompt.ActionText
+	promptGui.Adornee = prompt.Parent
+	promptGui.Enabled = true
+	stopHoldAnimation()
+end)
+
+ProximityPromptService.PromptHidden:Connect(function(prompt)
+	if activePrompt == prompt then
+		promptGui.Enabled = false
+		promptGui.Adornee = nil
+		activePrompt = nil
+		stopHoldAnimation()
+	end
+end)
+
+ProximityPromptService.PromptButtonHoldBegan:Connect(function(prompt)
+	if prompt ~= activePrompt then
+		return
+	end
+	local duration = prompt.HoldDuration
+	local startedAt = os.clock()
+	holdConnection = RunService.RenderStepped:Connect(function()
+		local alpha = if duration > 0 then math.min((os.clock() - startedAt) / duration, 1) else 1
+		promptBarFill.Size = UDim2.new(alpha, 0, 1, 0)
+	end)
+end)
+
+ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt)
+	if prompt == activePrompt then
+		stopHoldAnimation()
+	end
+end)
 
 local function updateCash()
 	local cash = player:GetAttribute("Cash")

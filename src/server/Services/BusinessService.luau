@@ -250,6 +250,7 @@ local function addPrompt(parent, actionText, objectText, callback)
 	prompt.HoldDuration = 0.5
 	prompt.MaxActivationDistance = 12
 	prompt.RequiresLineOfSight = false
+	prompt.Style = Enum.ProximityPromptStyle.Custom
 	prompt.Parent = parent
 	prompt.Triggered:Connect(callback)
 	return prompt
