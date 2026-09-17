@@ -69,4 +69,13 @@ Config.Customers = {
 	MaxPuttingQueueSize = 3,
 }
 
+Config.Sounds = {
+	Ambient = { Id = "rbxassetid://4702169834", Volume = 0.25, Looped = true },
+	Music = { Id = "rbxassetid://89145465730702", Volume = 0.12, Looped = true },
+	UIClick = { Id = "rbxassetid://88442833509532", Volume = 0.4 },
+	SwingWhoosh = { Id = "rbxassetid://138269694368715", Volume = 0.6, MaxConcurrent = 2 },
+	PuttTap = { Id = "rbxassetid://140323850218372", Volume = 0.5, MaxConcurrent = 2 },
+	CashChime = { Id = "rbxassetid://120891770644830", Volume = 0.5, MaxConcurrent = 2 },
+}
+
 return Config

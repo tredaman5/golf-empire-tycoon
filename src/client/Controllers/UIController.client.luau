@@ -2,6 +2,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
+local SoundService = game:GetService("SoundService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 
 local player = Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
@@ -31,6 +34,43 @@ local function applyPanelStyle(instance, borderColor)
 	stroke.Thickness = 2
 	stroke.Parent = instance
 end
+
+-- Sound Ids come from Config.Sounds (see Config.luau) so swapping in real
+-- Toolbox assets never requires touching this file.
+local activeSoundCounts = {}
+
+local function playSound(name, parent)
+	local settings = Config.Sounds[name]
+	if not settings or not settings.Id or settings.Id == "rbxassetid://0" then
+		return nil
+	end
+	local cap = settings.MaxConcurrent
+	if cap then
+		local active = activeSoundCounts[name] or 0
+		if active >= cap then
+			return nil
+		end
+		activeSoundCounts[name] = active + 1
+	end
+	local sound = Instance.new("Sound")
+	sound.SoundId = settings.Id
+	sound.Volume = settings.Volume or 0.5
+	sound.Looped = settings.Looped or false
+	sound.Parent = parent or SoundService
+	sound:Play()
+	if not settings.Looped then
+		sound.Ended:Connect(function()
+			if cap then
+				activeSoundCounts[name] = math.max((activeSoundCounts[name] or 1) - 1, 0)
+			end
+			sound:Destroy()
+		end)
+	end
+	return sound
+end
+
+playSound("Ambient", SoundService)
+playSound("Music", SoundService)
 
 local cashLabel = Instance.new("TextLabel")
 cashLabel.Name = "CashLabel"
@@ -178,9 +218,16 @@ ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt)
 	end
 end)
 
+local lastCash = nil
 local function updateCash()
 	local cash = player:GetAttribute("Cash")
 	cashLabel.Text = `Cash: ${if typeof(cash) == "number" then cash else 0}`
+	if typeof(cash) == "number" then
+		if lastCash ~= nil and cash ~= lastCash then
+			playSound("CashChime")
+		end
+		lastCash = cash
+	end
 end
 
 local feedbackVersion = 0
@@ -264,6 +311,8 @@ local function animateCustomer(customer, action, version)
 		end
 	end
 	pose(targets.Back, if isPutter then 0.6 else 0.8)
+	local impactPart = customer:FindFirstChild("HumanoidRootPart") or customer:FindFirstChildWhichIsA("BasePart")
+	playSound(if isPutter then "PuttTap" else "SwingWhoosh", impactPart)
 	pose(targets.Follow, if isPutter then 0.4 else 0.32)
 	pose({ Club = CFrame.identity, Right = CFrame.identity, Left = CFrame.identity, Waist = CFrame.identity }, 0.5)
 end
@@ -333,6 +382,7 @@ for _, strategyName in { "Value", "Standard", "Premium" } do
 	corner.CornerRadius = Theme.CornerRadius
 	corner.Parent = button
 	button.Activated:Connect(function()
+		playSound("UIClick")
 		managementEvent:FireServer("SetPricing", strategyName)
 	end)
 	pricingButtons[strategyName] = button
@@ -350,7 +400,10 @@ closeButton.Parent = dashboard
 local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = Theme.CornerRadius
 closeCorner.Parent = closeButton
-closeButton.Activated:Connect(function() dashboard.Visible = false end)
+closeButton.Activated:Connect(function()
+	playSound("UIClick")
+	dashboard.Visible = false
+end)
 
 local function updateDashboard()
 	local strategy = player:GetAttribute("PricingStrategy") or "Standard"
@@ -365,6 +418,10 @@ for _, attribute in { "PricingStrategy", "CustomersServed", "LifetimeRevenue", "
 	player:GetAttributeChangedSignal(attribute):Connect(updateDashboard)
 end
 managementEvent.OnClientEvent:Connect(function(action)
-	if action == "Open" then updateDashboard(); dashboard.Visible = true end
+	if action == "Open" then
+		playSound("UIClick")
+		updateDashboard()
+		dashboard.Visible = true
+	end
 end)
 updateDashboard()
