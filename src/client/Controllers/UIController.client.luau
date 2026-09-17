@@ -412,6 +412,9 @@ local function updateDashboard()
 		local active = strategyName == strategy
 		button.BackgroundColor3 = active and Theme.Accent or Theme.Button
 		button.TextColor3 = active and Theme.TextDark or Theme.Text
+		-- Active state is never color-only: the checkmark and label text also
+		-- change, so it still reads correctly for colorblind players.
+		button.Text = if active then `✓ {strategyName}` else strategyName
 	end
 end
 for _, attribute in { "PricingStrategy", "CustomersServed", "LifetimeRevenue", "QueueLength", "BaysOccupied" } do
