@@ -101,17 +101,23 @@ local function createPropertyLayout(parent, origin)
 	createGolfCart("PropertyCart1", origin + Vector3.new(38, 0.7, -68), Color3.fromRGB(35, 115, 65))
 	createGolfCart("PropertyCart2", origin + Vector3.new(52, 0.7, -68), Color3.fromRGB(35, 115, 65))
 
-	local waitingLane = makePart(layout, "CustomerWaitingLane", Vector3.new(12, 0.16, 32), origin + Vector3.new(0, 0.82, -16), Color3.fromRGB(175, 170, 155))
+	-- These are thick, not thin: most of each path's length runs over bare grass
+	-- rather than crossing another path, so the base has to reach all the way
+	-- down to ground level (0.5) or it reads as a slab floating in mid-air. Only
+	-- the top height matters for clearing whatever they cross.
+	local waitingLane = makePart(layout, "CustomerWaitingLane", Vector3.new(12, 0.54, 32), origin + Vector3.new(0, 0.77, -16), Color3.fromRGB(175, 170, 155))
 	waitingLane.Material = Enum.Material.Pavement
-	local puttingWaitingLane = makePart(layout, "PuttingWaitingLane", Vector3.new(30, 0.16, 7), origin + Vector3.new(30, 0.82, -18), Color3.fromRGB(175, 170, 155))
+	local puttingWaitingLane = makePart(layout, "PuttingWaitingLane", Vector3.new(30, 0.54, 7), origin + Vector3.new(30, 0.77, -18), Color3.fromRGB(175, 170, 155))
 	puttingWaitingLane.Material = Enum.Material.Pavement
-	local rangeExitPath = makePart(layout, "RangeCustomerExitPath", Vector3.new(7, 0.16, 30), origin + Vector3.new(-18, 0.88, -33), Color3.fromRGB(205, 194, 165))
+	local rangeExitPath = makePart(layout, "RangeCustomerExitPath", Vector3.new(7, 0.54, 30), origin + Vector3.new(-18, 0.77, -33), Color3.fromRGB(205, 194, 165))
 	rangeExitPath.Material = Enum.Material.Cobblestone
-	local puttingExitPath = makePart(layout, "PuttingCustomerExitPath", Vector3.new(7, 0.16, 30), origin + Vector3.new(60, 0.8, -33), Color3.fromRGB(205, 194, 165))
+	local puttingExitPath = makePart(layout, "PuttingCustomerExitPath", Vector3.new(7, 0.54, 30), origin + Vector3.new(60, 0.77, -33), Color3.fromRGB(205, 194, 165))
 	puttingExitPath.Material = Enum.Material.Cobblestone
-	local puttingPath = makePart(layout, "PuttingGreenPath", Vector3.new(7, 0.16, 46), origin + Vector3.new(50, 0.8, 4), Color3.fromRGB(205, 194, 165))
+	-- PuttingGreenPath and ManagementPatio sit a tier above the rest: they cross
+	-- FacilityCrossPath *and* would otherwise overlap PuttingWaitingLane/GuestLoungePatio.
+	local puttingPath = makePart(layout, "PuttingGreenPath", Vector3.new(7, 0.78, 46), origin + Vector3.new(50, 0.89, 4), Color3.fromRGB(205, 194, 165))
 	puttingPath.Material = Enum.Material.Cobblestone
-	local kioskPatio = makePart(layout, "ManagementPatio", Vector3.new(18, 0.18, 14), origin + Vector3.new(48, 0.78, -28), Color3.fromRGB(175, 170, 155))
+	local kioskPatio = makePart(layout, "ManagementPatio", Vector3.new(18, 0.8, 14), origin + Vector3.new(48, 0.9, -28), Color3.fromRGB(175, 170, 155))
 	kioskPatio.Material = Enum.Material.Pavement
 
 	for _, x in { -7, 7 } do
@@ -127,7 +133,7 @@ local function createPropertyLayout(parent, origin)
 		rail.Material = Enum.Material.Metal
 	end
 
-	local clubhouseLawn = makePart(layout, "FutureClubhouseLawn", Vector3.new(30, 0.12, 24), origin + Vector3.new(-48, 0.55, -4), Color3.fromRGB(67, 132, 63))
+	local clubhouseLawn = makePart(layout, "FutureClubhouseLawn", Vector3.new(30, 0.12, 24), origin + Vector3.new(-48, 0.52, -4), Color3.fromRGB(67, 132, 63))
 	clubhouseLawn.Material = Enum.Material.Grass
 	for _, offset in { Vector3.new(-64, 1.6, -15), Vector3.new(-32, 1.6, -15), Vector3.new(-64, 1.6, 8), Vector3.new(-32, 1.6, 8) } do
 		local shrub = makePart(layout, "DevelopmentShrub", Vector3.new(4, 3, 4), origin + offset, Color3.fromRGB(40, 112, 54))
@@ -135,10 +141,10 @@ local function createPropertyLayout(parent, origin)
 		shrub.Material = Enum.Material.Grass
 	end
 
-	local lounge = makePart(layout, "GuestLoungePatio", Vector3.new(20, 0.16, 12), origin + Vector3.new(48, 0.77, -5), Color3.fromRGB(190, 185, 170))
+	local lounge = makePart(layout, "GuestLoungePatio", Vector3.new(20, 0.54, 12), origin + Vector3.new(48, 0.77, -5), Color3.fromRGB(190, 185, 170))
 	lounge.Material = Enum.Material.Pavement
 	for _, x in { 41, 55 } do
-		local bench = makePart(layout, "LoungeBench", Vector3.new(6, 0.7, 1.5), origin + Vector3.new(x, 1.6, -8), Color3.fromRGB(68, 82, 78))
+		local bench = makePart(layout, "LoungeBench", Vector3.new(6, 0.7, 1.5), origin + Vector3.new(x, 1.35, -8), Color3.fromRGB(68, 82, 78))
 		bench.Material = Enum.Material.Metal
 	end
 end
@@ -168,7 +174,7 @@ local function createFacility(parent, origin, bayCount)
 
 	local rangeField = makePart(model, "RangeField", Vector3.new(64, 0.35, 78), origin + Vector3.new(0, 0.7, 54), Color3.fromRGB(72, 145, 67))
 	rangeField.Material = Enum.Material.Grass
-	local fairway = makePart(model, "FairwayStripe", Vector3.new(22, 0.08, 76), origin + Vector3.new(0, 0.92, 54), Color3.fromRGB(82, 158, 72))
+	local fairway = makePart(model, "FairwayStripe", Vector3.new(22, 0.08, 76), origin + Vector3.new(0, 0.97, 54), Color3.fromRGB(82, 158, 72))
 	fairway.Material = Enum.Material.Grass
 
 	local function createTarget(name, x, z, diameter, color)
@@ -309,7 +315,7 @@ local function createPuttingGreen(content, origin)
 	local model = Instance.new("Model")
 	model.Name = "PuttingGreen"
 	model.Parent = content
-	local fringe = makePart(model, "Fringe", Vector3.new(0.5, 28, 28), origin + Vector3.new(50, 0.85, 25), Color3.fromRGB(64, 128, 58))
+	local fringe = makePart(model, "Fringe", Vector3.new(0.5, 28, 28), origin + Vector3.new(50, 0.74, 25), Color3.fromRGB(64, 128, 58))
 	fringe.Shape = Enum.PartType.Cylinder
 	fringe.Orientation = Vector3.new(0, 0, 90)
 	fringe.Material = Enum.Material.Grass
@@ -320,7 +326,7 @@ local function createPuttingGreen(content, origin)
 	makePart(model, "Cup", Vector3.new(1.2, 0.2, 1.2), origin + Vector3.new(53, 1.4, 27), Color3.fromRGB(20, 20, 20))
 	makePart(model, "FlagPole", Vector3.new(0.25, 8, 0.25), origin + Vector3.new(53, 5, 27), Color3.fromRGB(235, 235, 235))
 	makePart(model, "Flag", Vector3.new(3, 2, 0.2), origin + Vector3.new(54.5, 8, 27), Color3.fromRGB(225, 55, 45))
-	local bunker = makePart(model, "PracticeBunker", Vector3.new(0.35, 9, 9), origin + Vector3.new(42, 0.8, 43), Color3.fromRGB(220, 205, 165))
+	local bunker = makePart(model, "PracticeBunker", Vector3.new(0.35, 9, 9), origin + Vector3.new(42, 0.67, 43), Color3.fromRGB(220, 205, 165))
 	bunker.Shape = Enum.PartType.Cylinder
 	bunker.Orientation = Vector3.new(0, 0, 90)
 	bunker.Material = Enum.Material.Sand
@@ -340,7 +346,7 @@ local function createProShop(content, origin)
 	model.Name = "ProShop"
 	model.Parent = content
 	local center = origin + Vector3.new(-48, 0, -4)
-	local floor = makePart(model, "ShopFloor", Vector3.new(30, 0.8, 24), center + Vector3.new(0, 1, 0), Color3.fromRGB(185, 180, 165))
+	local floor = makePart(model, "ShopFloor", Vector3.new(30, 0.92, 24), center + Vector3.new(0, 0.94, 0), Color3.fromRGB(185, 180, 165))
 	floor.Material = Enum.Material.Slate
 	local roof = makePart(model, "ShopRoof", Vector3.new(32, 0.8, 26), center + Vector3.new(0, 10, 0), Color3.fromRGB(35, 48, 52))
 	roof.Material = Enum.Material.Metal

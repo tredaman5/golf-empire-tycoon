@@ -78,15 +78,15 @@ local function createWorldInfrastructure(parent)
 	local middleRoad = makePart(world, "MiddleBoulevard", Vector3.new(310, 0.35, 10), Vector3.new(0, 0.42, 100), Color3.fromRGB(54, 59, 60))
 	middleRoad.Material = Enum.Material.Asphalt
 	for x = -145, 145, 12 do
-		local marking = makePart(world, "BoulevardMarking", Vector3.new(6, 0.05, 0.3), Vector3.new(x, 0.62, -105), Color3.fromRGB(235, 220, 150))
+		local marking = makePart(world, "BoulevardMarking", Vector3.new(6, 0.05, 0.3), Vector3.new(x, 0.65, -105), Color3.fromRGB(235, 220, 150))
 		marking.Material = Enum.Material.SmoothPlastic
 	end
 	for z = -95, 295, 14 do
-		local marking = makePart(world, "AccessRoadMarking", Vector3.new(0.25, 0.05, 7), Vector3.new(0, 0.62, z), Color3.fromRGB(235, 220, 150))
+		local marking = makePart(world, "AccessRoadMarking", Vector3.new(0.25, 0.05, 7), Vector3.new(0, 0.65, z), Color3.fromRGB(235, 220, 150))
 		marking.Material = Enum.Material.SmoothPlastic
 	end
 	for x = -145, 145, 12 do
-		local marking = makePart(world, "MiddleRoadMarking", Vector3.new(6, 0.05, 0.3), Vector3.new(x, 0.62, 100), Color3.fromRGB(235, 220, 150))
+		local marking = makePart(world, "MiddleRoadMarking", Vector3.new(6, 0.05, 0.3), Vector3.new(x, 0.65, 100), Color3.fromRGB(235, 220, 150))
 		marking.Material = Enum.Material.SmoothPlastic
 	end
 	for _, z in { -115, -95 } do
@@ -170,22 +170,27 @@ function PlotService:Init(dataService)
 			local curb = makePart(model, "FrontPropertyCurb", Vector3.new(64, 0.5, 0.7), origin + Vector3.new(x, 0.62, -94.5), Color3.fromRGB(194, 190, 178))
 			curb.Material = Enum.Material.Concrete
 		end
-		local path = makePart(model, "EntryPath", Vector3.new(10, 0.25, 88), origin + Vector3.new(0, 0.65, -45), Color3.fromRGB(205, 194, 165))
+		-- These four tile edge-to-edge along Z with zero footprint overlap (south to
+		-- north): EntryPath -> ArrivalPlaza -> FacilityCrossPath -> EntryPathNorth.
+		-- All flat at the same height, so none of them can ever fight for depth.
+		local path = makePart(model, "EntryPath", Vector3.new(10, 0.2, 50), origin + Vector3.new(0, 0.7, -64), Color3.fromRGB(205, 194, 165))
 		path.Material = Enum.Material.Cobblestone
-		local plaza = makePart(model, "ArrivalPlaza", Vector3.new(28, 0.22, 22), origin + Vector3.new(0, 0.67, -28), Color3.fromRGB(190, 185, 170))
+		local plaza = makePart(model, "ArrivalPlaza", Vector3.new(28, 0.2, 17.5), origin + Vector3.new(0, 0.7, -30.25), Color3.fromRGB(190, 185, 170))
 		plaza.Material = Enum.Material.Pavement
-		local crossPath = makePart(model, "FacilityCrossPath", Vector3.new(104, 0.2, 7), origin + Vector3.new(0, 0.68, -18), Color3.fromRGB(205, 194, 165))
+		local crossPath = makePart(model, "FacilityCrossPath", Vector3.new(104, 0.2, 7), origin + Vector3.new(0, 0.7, -18), Color3.fromRGB(205, 194, 165))
 		crossPath.Material = Enum.Material.Cobblestone
+		local pathNorth = makePart(model, "EntryPathNorth", Vector3.new(10, 0.2, 13.5), origin + Vector3.new(0, 0.7, -7.75), Color3.fromRGB(205, 194, 165))
+		pathNorth.Material = Enum.Material.Cobblestone
 		local parking = makePart(model, "GuestParking", Vector3.new(46, 0.2, 30), origin + Vector3.new(-42, 0.66, -65), Color3.fromRGB(62, 67, 68))
 		parking.Material = Enum.Material.Asphalt
 		for x = -60, -24, 9 do
-			local stripe = makePart(model, "ParkingStripe", Vector3.new(0.25, 0.05, 11), origin + Vector3.new(x, 0.8, -65), Color3.fromRGB(235, 225, 180))
+			local stripe = makePart(model, "ParkingStripe", Vector3.new(0.25, 0.05, 11), origin + Vector3.new(x, 0.84, -65), Color3.fromRGB(235, 225, 180))
 			stripe.Material = Enum.Material.SmoothPlastic
 		end
 		local cartPad = makePart(model, "GolfCartParking", Vector3.new(32, 0.2, 22), origin + Vector3.new(45, 0.66, -68), Color3.fromRGB(105, 110, 102))
 		cartPad.Material = Enum.Material.Pavement
 		for x = 34, 56, 11 do
-			local stripe = makePart(model, "CartParkingStripe", Vector3.new(0.2, 0.05, 14), origin + Vector3.new(x, 0.8, -68), Color3.fromRGB(235, 225, 180))
+			local stripe = makePart(model, "CartParkingStripe", Vector3.new(0.2, 0.05, 14), origin + Vector3.new(x, 0.84, -68), Color3.fromRGB(235, 225, 180))
 			stripe.Material = Enum.Material.SmoothPlastic
 		end
 		for _, offset in { Vector3.new(-15, 0, -40), Vector3.new(15, 0, -40), Vector3.new(-15, 0, -16), Vector3.new(15, 0, -16) } do
